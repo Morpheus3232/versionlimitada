@@ -76,26 +76,20 @@ export default function IdeaBoard() {
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Capturá una idea — se guarda en tu navegador"
           aria-label="Nueva idea"
-          className="flex-1 border border-zinc-800 bg-zinc-900/60 px-4 py-3 font-mono text-sm text-zinc-200 placeholder-zinc-500 outline-none focus:border-zinc-600"
+          className="flex-1 rounded-[10px] border border-line bg-panel px-4 py-3 font-mono text-sm text-ink placeholder-dim outline-none focus:border-accent"
         />
         <button
           type="submit"
-          className="border border-zinc-500 bg-zinc-700/60 px-5 py-3 text-sm font-semibold text-zinc-100 transition-colors hover:bg-zinc-600"
+          className="rounded-[10px] bg-accent px-5 py-3 text-sm font-semibold text-paper transition-colors hover:bg-accenthover"
         >
           Capturar →
         </button>
       </form>
 
-      <div className="mt-6 flex flex-wrap gap-2 text-xs text-zinc-500">
+      <div className="mt-6 flex flex-wrap gap-2 text-xs text-dim">
         {STAGES.map((s) => (
           <span key={s.id} className="inline-flex items-center gap-1.5">
-            <span
-              className={
-                s.id === "descartado"
-                  ? "h-1.5 w-1.5 bg-zinc-600"
-                  : "h-1.5 w-1.5 bg-zinc-400"
-              }
-            />
+            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-muted" />
             {s.label} {counts[s.id]}
           </span>
         ))}
@@ -103,7 +97,7 @@ export default function IdeaBoard() {
 
       <ul className="mt-4 space-y-2">
         {ideas.length === 0 && (
-          <li className="border border-dashed border-zinc-800 px-4 py-5 text-center font-mono text-sm text-zinc-600">
+          <li className="rounded-[10px] border border-dashed border-line px-4 py-5 text-center font-mono text-sm text-dim">
             Sin ideas todavía. El laboratorio empieza con una.
           </li>
         )}
@@ -112,23 +106,21 @@ export default function IdeaBoard() {
           return (
             <li
               key={i.id}
-              className="flex items-center justify-between gap-4 border border-zinc-800 bg-zinc-900/40 px-4 py-3"
+              className="flex items-center justify-between gap-4 rounded-[10px] border border-line bg-panel px-4 py-3"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm text-zinc-200">{i.title}</p>
-                <p className="mt-0.5 font-mono text-xs text-zinc-600">
+                <p className="truncate text-sm text-ink">{i.title}</p>
+                <p className="mt-0.5 font-mono text-xs text-dim">
                   {new Date(i.created).toLocaleDateString("es-AR")}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <span className="font-mono text-xs text-zinc-500">
-                  {stage.label}
-                </span>
+                <span className="font-mono text-xs text-muted">{stage.label}</span>
                 {i.stage !== "descartado" && i.stage !== "vivo" && (
                   <button
                     onClick={() => advance(i.id)}
                     aria-label="Avanzar de etapa"
-                    className="border border-zinc-700 px-2 py-1 font-mono text-xs text-zinc-300 hover:border-zinc-500"
+                    className="rounded-[6px] border border-line px-2 py-1 font-mono text-xs text-muted transition hover:border-accent/60 hover:text-accent"
                   >
                     avanzar
                   </button>
@@ -136,7 +128,7 @@ export default function IdeaBoard() {
                 <button
                   onClick={() => kill(i.id)}
                   aria-label="Borrar idea"
-                  className="border border-zinc-800 px-2 py-1 font-mono text-xs text-zinc-500 hover:border-red-900 hover:text-red-400"
+                  className="rounded-[6px] border border-line px-2 py-1 font-mono text-xs text-dim transition hover:border-red-900 hover:text-red-400"
                 >
                   x
                 </button>

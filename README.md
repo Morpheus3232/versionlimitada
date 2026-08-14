@@ -4,7 +4,9 @@
 
 **VersionLimitada** es un laboratorio de productos digitales. No nace para "hacer aplicaciones" sino para **detectar problemas que valga la pena resolver y convertirlos en productos reales** con aplicaciones, agentes de IA y herramientas propias.
 
-Este repositorio es la **casa / vitrina del laboratorio** (web en `https://versionlimitada.online`) y el punto de partida de todo proyecto que nace acá.
+> **Acceso público y código abierto (MIT).** Este repositorio y su utilidad son libres: podés usarlo, modificarlo y compartirlo. La web vive en `https://versionlimitada.online` y está en síntonia visual con `molino.app`.
+
+Este repositorio es la **casa / vitrina del laboratorio** y el punto de partida de todo proyecto que nace acá.
 
 ---
 
@@ -64,6 +66,10 @@ npm run dev        # http://localhost:3001 (si molino ocupa el 3000)
 ```
 
 Despliegue: Vercel, auto-deploy sobre `main` → `https://versionlimitada.online`.
+
+## Licencia
+
+MIT — libre para usar, modificar y compartir. Ver [LICENSE](./LICENSE).
 
 ---
 

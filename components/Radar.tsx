@@ -124,10 +124,10 @@ export default function Radar() {
             aria-controls={`radar-panel-${w.id}`}
             tabIndex={activeId === w.id ? 0 : -1}
             onClick={() => setActiveId(w.id)}
-            className={`border px-4 py-2 font-mono text-sm transition-colors ${
+            className={`rounded-[6px] border px-4 py-2 font-heading text-sm transition-colors ${
               activeId === w.id
-                ? "border-cyan-300 bg-cyan-300/10 text-cyan-200"
-                : "border-[#1d2433] text-[#9aa4b8] hover:border-cyan-400/40 hover:text-cyan-200"
+                ? "border-accent bg-accent/10 text-accenthover"
+                : "border-line text-muted hover:border-accent/40 hover:text-accent"
             }`}
           >
             {w.label}
@@ -144,23 +144,23 @@ export default function Radar() {
         {active.ideas.map((idea) => (
           <article key={idea.title} className="cell flex flex-col p-5">
             <div className="flex items-start justify-between gap-3">
-              <h3 className="font-mono text-base font-semibold text-[#f2f5fa]">
+              <h3 className="font-heading text-base font-semibold text-ink">
                 {idea.title}
               </h3>
-              <span className="shrink-0 border border-amber-400/30 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-amber-200/90">
+              <span className="shrink-0 rounded-[6px] border border-gold/40 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-gold">
                 {idea.tag}
               </span>
             </div>
-            <p className="mt-3 flex-1 text-sm leading-relaxed text-[#9aa4b8]">
+            <p className="mt-3 flex-1 text-sm leading-relaxed text-muted">
               {idea.why}
             </p>
             <div className="mt-4 flex items-center justify-between gap-3">
-              <span className="font-mono text-[11px] text-[#5c6679]">{idea.src}</span>
+              <span className="font-mono text-[11px] text-dim">{idea.src}</span>
               <a
                 href={idea.url}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 font-mono text-xs text-cyan-300 transition hover:text-cyan-100"
+                className="inline-flex items-center gap-1 font-mono text-xs text-accent transition hover:text-accenthover"
               >
                 ver fuente →
               </a>
@@ -169,7 +169,7 @@ export default function Radar() {
         ))}
       </div>
 
-      <p className="mt-4 max-w-3xl font-mono text-[11px] leading-relaxed text-[#5c6679]">
+      <p className="mt-4 max-w-3xl font-mono text-[11px] leading-relaxed text-dim">
         Radar web de lanzamientos y tendencias (Show HN, Product Hunt, YC,
         prensa). Es una instantánea curada, no una promesa: cada idea se valida
         con el pipeline de la central antes de construir.
