@@ -1,35 +1,240 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* VersionLimitada — command deck tokens */
+  --vl-ink: #05060a;
+  --vl-panel: #0a0d14;
+  --vl-raise: #10141f;
+  --vl-line: #1d2433;
+  --vl-line-soft: #161c29;
+  --vl-cyan: #5ee0ff;
+  --vl-violet: #7b5cff;
+  --vl-amber: #ffc24d;
+  --vl-text: #f2f5fa;
+  --vl-muted: #9aa4b8;
+  --vl-dim: #5c6679;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 html {
-  background: var(--background);
+  background: var(--vl-ink);
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, Helvetica, Arial, sans-serif;
+  background: var(--vl-ink);
+  color: var(--vl-text);
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-*::selection {
-  background: #34d399;
-  color: #09090b;
+/* Accesibilidad: contraste alto y foco visible */
+::selection {
+  background: var(--vl-cyan);
+  color: #05060a;
+}
+:focus-visible {
+  outline: 2px solid var(--vl-cyan);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+:is(a, button, input, [tabindex]):focus-visible {
+  outline-color: var(--vl-cyan);
+}
+
+/* ── HUD atmosfera ─────────────────────────────── */
+.vl-sky {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 55% at 72% 12%, rgba(123, 92, 255, 0.30), transparent 62%),
+    radial-gradient(52% 48% at 24% 8%, rgba(94, 224, 255, 0.22), transparent 60%),
+    radial-gradient(70% 60% at 50% 108%, rgba(94, 224, 255, 0.10), transparent 60%),
+    var(--vl-ink);
+  animation: vl-drift 26s ease-in-out infinite alternate;
+}
+.vl-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(94, 224, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(94, 224, 255, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(75% 70% at 50% 0%, #000 30%, transparent 75%);
+  opacity: 0.7;
+}
+.vl-grid-lite {
+  background-image:
+    linear-gradient(to right, rgba(229, 235, 250, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(229, 235, 250, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(80% 80% at 50% 50%, #000 20%, transparent 72%);
+}
+
+/* ── Orbe (nexo idea → negocio) ────────────────── */
+.vl-orb {
+  position: relative;
+  width: 220px;
+  height: 220px;
+}
+.vl-orb-core {
+  position: absolute;
+  inset: 26%;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 30%, #bfefff, #4cc9f0 42%, #6d46d6 80%, #45309e);
+  box-shadow: 0 0 60px rgba(94, 224, 255, 0.55), 0 0 130px rgba(123, 92, 255, 0.45);
+  animation: vl-pulse 4.5s ease-in-out infinite;
+}
+.vl-orb-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1px dashed rgba(94, 224, 255, 0.5);
+  animation: vl-spin 22s linear infinite;
+}
+.vl-orb-ring::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--vl-amber);
+  box-shadow: 0 0 12px var(--vl-amber);
+}
+.vl-orb-corona {
+  position: absolute;
+  inset: -30%;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(94, 224, 255, 0.18), rgba(123, 92, 255, 0.12) 45%, transparent 70%);
+  filter: blur(6px);
+}
+.vl-orb-scrim {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background:
+    conic-gradient(from 0deg, transparent 0deg, rgba(255,194,77,0.25) 60deg, transparent 120deg),
+    conic-gradient(from 180deg, transparent 0deg, rgba(123,92,255,0.30) 70deg, transparent 150deg);
+  -webkit-mask: radial-gradient(circle, transparent 54%, #000 56%, #000 62%, transparent 64%);
+  mask: radial-gradient(circle, transparent 54%, #000 56%, #000 62%, transparent 64%);
+  animation: vl-spin-rev 30s linear infinite;
+}
+.vl-orb-sats {
+  position: absolute;
+  inset: 4%;
+  animation: vl-spin 40s linear infinite;
+}
+.vl-sat {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--vl-cyan);
+  box-shadow: 0 0 8px var(--vl-cyan);
+}
+
+/* ── Movimiento ────────────────────────────────── */
+.vl-enter {
+  opacity: 0;
+  animation: vl-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+.d1 { animation-delay: 0.08s; }
+.d2 { animation-delay: 0.2s; }
+.d3 { animation-delay: 0.32s; }
+.d4 { animation-delay: 0.44s; }
+.d5 { animation-delay: 0.58s; }
+
+.vl-blink {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  margin-left: 0.15em;
+  transform: translateY(0.14em);
+  background: var(--vl-cyan);
+  animation: vl-blink 1.1s step-end infinite;
+}
+
+.vl-grad {
+  background: linear-gradient(100deg, var(--vl-text) 5%, var(--vl-cyan) 55%, var(--vl-violet) 92%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glass {
+  background: rgba(10, 13, 20, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Targetas tipo celda de consola */
+.cell {
+  position: relative;
+  border: 1px solid var(--vl-line-soft);
+  background: linear-gradient(180deg, var(--vl-raise), var(--vl-panel) 120%);
+}
+.cell::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 34px;
+  height: 2px;
+  background: var(--vl-cyan);
+  opacity: 0.7;
+}
+.cell:hover {
+  border-color: #2c3550;
+  transform: translateY(-2px);
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 50;
+}
+.skip-link:focus {
+  left: 0;
+  background: var(--vl-cyan);
+  color: var(--vl-ink);
+  padding: 12px 20px;
+}
+
+/* ── keyframes ─────────────────────────────────── */
+@keyframes vl-drift {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(-30px, -20px) scale(1.08); opacity: 0.92; }
+}
+@keyframes vl-spin { to { transform: rotate(360deg); } }
+@keyframes vl-spin-rev { to { transform: rotate(-360deg); } }
+@keyframes vl-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.04); opacity: 0.88; }
+}
+@keyframes vl-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes vl-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* Respeta prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .vl-sky, .vl-orb-core, .vl-orb-ring, .vl-orb-scrim, .vl-orb-sats,
+  .vl-blink, .vl-enter {
+    animation: none !important;
+  }
+  .vl-enter { opacity: 1; transform: none; }
+  .vl-blink { background: var(--vl-cyan); animation: none; }
+  .cell:hover { transform: none; }
 }
