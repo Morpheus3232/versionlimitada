@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -9,16 +10,65 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], display: "swap", vari
 export const metadata: Metadata = {
   title: "VersionLimitada — Laboratorio de productos y agentes de IA",
   description:
-    "Laboratorio que convierte ideas en realidad: aplicaciones, agentes de IA y herramientas. Molino, la web de autoconocimiento, es su proyecto de muestra.",
+    "Laboratorio que convierte ideas en realidad: aplicaciones, agentes de IA, herramientas. Incluye un constructor de webs y una guía para patentar ideas, con transparencia total.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+const NAV = [
+  { href: "/", label: "Inicio" },
+  { href: "/#motor", label: "Motor de IA" },
+  { href: "/#herramientas", label: "Herramientas" },
+  { href: "/#proyectos", label: "Proyectos" },
+  { href: "/#radar", label: "Radar de ideas" },
+  { href: "/construir", label: "Construir" },
+  { href: "/patentes", label: "Patentar" },
+  { href: "/transparencia", label: "Transparencia" },
+];
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="es"
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-paper text-ink font-sans">{children}</body>
+      <body className="min-h-full flex flex-col bg-paper text-ink font-sans">
+        <a href="#principal" className="skip-link">
+          Saltar al contenido
+        </a>
+
+        <header className="glass sticky top-0 z-20 border-b border-linesoft">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3">
+            <Link href="/" className="flex items-center gap-2 font-heading text-sm font-bold tracking-tight">
+              <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-accent shadow-[0_0_10px_rgba(124,140,255,0.9)]" />
+              VersionLimitada
+              <span className="ml-1 hidden border border-line px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-muted sm:inline">
+                código abierto
+              </span>
+            </Link>
+            <nav aria-label="Principal" className="hidden items-center gap-1 font-mono text-xs text-muted xl:flex">
+              {NAV.map((n) => (
+                <Link key={n.href} href={n.href} className="rounded-[6px] px-2.5 py-2 transition-colors hover:text-accent">
+                  {n.label}
+                </Link>
+              ))}
+            </nav>
+            <p className="flex items-center gap-2 font-mono text-xs text-muted">
+              <span aria-hidden className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+              <span className="hidden sm:inline">sistema en línea</span>
+            </p>
+          </div>
+        </header>
+
+        <main id="principal" className="flex-1">
+          {children}
+        </main>
+
+        <footer className="border-t border-linesoft">
+          <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-10 font-mono text-xs text-dim sm:flex-row sm:items-center">
+            <p>VersionLimitada · base de cómputos · código abierto (MIT)</p>
+            <p>Transparencia total · en síntonia visual con molino.app</p>
+          </div>
+        </footer>
+      </body>
     </html>
   );
 }

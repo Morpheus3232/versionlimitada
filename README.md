@@ -54,6 +54,26 @@ versionlimitada/
 
 > Regla de oro: `apps/`, `agents/` y `shared/` se pueblan **por demanda**, no por adelantado. No construimos una "plataforma para crear plataformas".
 
+## Funcionalidades
+
+- **`/` — Base de cómputos**: motor de IA, herramientas, proyectos en vivo, **Radar de ideas** (últimos 30/60 días con fuentes) y **Tablero de ideas** (pipeline idea→negocio, localStorage).
+- **`/construir` — Constructor de webs (estilo Lovable)**: generá un sitio con una descripción, publicá en `/s/[slug]` o descargá el HTML. Motor de tokens tipo OpenRouter (ver transparencia).
+- **`/patentes` — Guía para patentar ideas**: simple y didáctica, multi-país, con fuentes oficiales y disclaimers.
+- **`/transparencia` — Modelo de precios del motor de tokens.**
+
+### Motor de tokens (`/construir`)
+
+- Los **primeros USD 0.35 de cómputo real son gratis** (los paga el dueño).
+- Cada recarga es de **USD 2.80** y acredita USD (2.80/8) de cómputo real.
+- Se cobra **8× el costo real** que el proveedor le factura al dueño (como OpenRouter).
+- Pagos con **Mercado Pago + PayPal** (la misma pasarela de molino.app).
+- Cuando el saldo llega a 0, el usuario se bloquea y se le pide recargar.
+
+**Requisitos para que `/construir` pague en producción:**
+1. Fondear la cuenta de OpenRouter (si no hay crédito, devuelve 402).
+2. Agregar `KV_REST_API_URL` + `KV_REST_API_TOKEN` (Vercel KV / Upstash) para persistir saldo y sitios publicados.
+3. Completar credenciales de Mercado Pago y PayPal (ver `.env.example`).
+
 ---
 
 ## Desarrollo local
