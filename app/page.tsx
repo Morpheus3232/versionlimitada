@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import IdeaBoard from "@/components/IdeaBoard";
+import Radar from "@/components/Radar";
 
 // ─── Instrumentos (datos de la central) ─────────────────────────────────────
 const SYSTEMS = [
@@ -62,8 +63,9 @@ const NAV = [
   { href: "#motor", label: "Motor de IA" },
   { href: "#herramientas", label: "Herramientas" },
   { href: "#proyectos", label: "Proyectos" },
+  { href: "#radar", label: "Radar de ideas" },
   { href: "#pipeline", label: "Pipeline" },
-  { href: "#ideas", label: "Tablero de ideas" },
+  { href: "#ideas", label: "Tablero" },
 ];
 
 // ─── Bloques ────────────────────────────────────────────────────────────────
@@ -281,8 +283,13 @@ export default function Home() {
           </div>
         </Section>
 
+        <Section id="radar">
+          <Eyebrow>04 · Radar de ideas</Eyebrow>
+          <Radar />
+        </Section>
+
         <Section id="pipeline">
-          <Eyebrow>04 · De idea a negocio</Eyebrow>
+          <Eyebrow>05 · De idea a negocio</Eyebrow>
           <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
             {FLOW.map((step, i) => (
               <span key={step} className="flex items-center gap-2">
@@ -305,7 +312,7 @@ export default function Home() {
         </Section>
 
         <Section id="ideas">
-          <Eyebrow>05 · Tablero de ideas</Eyebrow>
+          <Eyebrow>06 · Tablero de ideas</Eyebrow>
           <div className="cell p-6">
             <p className="mb-5 max-w-2xl text-sm text-[#9aa4b8]">
               Capturá una idea y avanzala en el pipeline. Solo se guarda en tu
@@ -316,7 +323,7 @@ export default function Home() {
         </Section>
 
         <Section id="reglas">
-          <Eyebrow>06 · Reglas del laboratorio</Eyebrow>
+          <Eyebrow>07 · Reglas del laboratorio</Eyebrow>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {PRINCIPLES.map((p) => (
               <li key={p} className="cell p-5 text-sm leading-snug text-[#c6cfe0]">
