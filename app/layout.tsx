@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VersionLimitada",
+  title: "VersionLimitada — Laboratorio de productos y agentes de IA",
   description:
-    "VersionLimitada — proyecto del laboratorio YOVISITEGANIMEDES.",
+    "Laboratorio que convierte ideas en realidad: aplicaciones, agentes de IA y herramientas. Molino, la web de autoconocimiento, es su proyecto de muestra.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
