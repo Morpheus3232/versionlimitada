@@ -1,40 +1,51 @@
-// Estado de la máquina: cifras reales, contadas del estado actual.
-// Si no hay datos, se dice. Nunca se rellenan números ficticios.
+// Estado del sistema: monitor operativo, no card de marketing.
+// Cada línea = valor → etiqueta → estado. Cifras reales, derivadas del estado.
 export default function Estado({
   signals,
   problems,
-  activeExperiments,
+  designed,
+  executed,
+  results,
+  decisions,
 }: {
   signals: number;
   problems: number;
-  activeExperiments: number;
+  designed: number;
+  executed: number;
+  results: number;
+  decisions: number;
 }) {
-  const cells = [
-    { label: "Señales detectadas", value: String(signals), sub: "fuentes públicas · observado" },
-    { label: "Problemas investigados", value: String(problems), sub: "expedientes abiertos" },
-    { label: "Experimentos corriendo", value: String(activeExperiments), sub: "infraestructura lista" },
+  const rows = [
+    { label: "Señales observadas", value: signals, state: "activo", on: true },
+    { label: "Expediente abierto", value: problems, state: "activo", on: true },
+    { label: "Experimentos diseñados", value: designed, state: "no lanzado", on: false },
+    { label: "Experimentos ejecutados", value: executed, state: "—", on: false },
+    { label: "Resultados", value: results, state: "sin datos", on: false },
+    { label: "Decisiones cerradas", value: decisions, state: "pendiente", on: false },
   ];
 
   return (
-    <div>
-      <div className="grid grid-cols-3 gap-px overflow-hidden rounded-[10px] border border-line bg-linesoft">
-        {cells.map((c) => (
-          <div key={c.label} className="bg-panel p-5 sm:p-6">
-            <p className="font-mono text-3xl font-bold text-ink sm:text-4xl">{c.value}</p>
-            <p className="mt-2 font-heading text-xs font-semibold uppercase tracking-wide text-muted sm:text-sm">
-              {c.label}
-            </p>
-            <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-accent sm:text-[11px]">
-              real · {c.sub}
-            </p>
+    <div className="overflow-hidden rounded-[10px] border border-line">
+      <div className="flex items-center justify-between border-b border-line bg-panel px-4 py-3">
+        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">estado del sistema</p>
+        <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-accent">
+          <span aria-hidden className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+          en línea
+        </span>
+      </div>
+      <dl className="divide-y divide-linesoft">
+        {rows.map((r) => (
+          <div key={r.label} className="flex items-center justify-between gap-4 bg-paper px-4 py-2.5">
+            <div className="flex items-baseline gap-3">
+              <dt className="font-mono text-xl font-bold text-ink">{r.value}</dt>
+              <dd className="font-heading text-xs font-medium uppercase tracking-wide text-muted">{r.label}</dd>
+            </div>
+            <span className={`font-mono text-[10px] uppercase tracking-widest ${r.on ? "text-accent" : "text-dim"}`}>
+              {r.state}
+            </span>
           </div>
         ))}
-      </div>
-      <p className="mt-3 rounded-[10px] border border-line bg-panel px-4 py-3 font-mono text-[11px] leading-relaxed text-dim">
-        Datos reales. La máquina está comenzando: expediente #001 abierto y primer
-        experimento listo para lanzarse. Cuando haya más señales o resultados, se
-        actualizan acá solos.
-      </p>
+      </dl>
     </div>
   );
 }

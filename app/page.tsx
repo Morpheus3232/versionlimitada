@@ -1,38 +1,27 @@
 import type { ReactNode } from "react";
-import Pipeline from "@/components/machine/Pipeline";
+import Pipeline, { type CircuitStep } from "@/components/machine/Pipeline";
 import Estado from "@/components/machine/Estado";
 import Signals from "@/components/machine/Signals";
 import Opportunities from "@/components/machine/Opportunities";
 import Experiments from "@/components/machine/Experiments";
 import Graveyard from "@/components/machine/Graveyard";
-import { ProvenanceKey } from "@/components/machine/Provenance";
-import { SIGNALS, OPPORTUNITIES, EXPERIMENTS, GRAVEYARD, NOTE } from "@/lib/machine/data";
+import { SIGNALS, OPPORTUNITIES, EXPERIMENTS, GRAVEYARD } from "@/lib/machine/data";
 
-// ─── Estructura editorial: la home es el estado vivo de la máquina ──────────
-function Section({
-  id,
-  eyebrow,
-  title,
-  lead,
-  children,
-}: {
+// ─── Estructura editorial: la home es el estado vivo de la máquina. ─────────
+function Section({ id, eyebrow, title, children }: {
   id: string;
   eyebrow: string;
   title: string;
-  lead?: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-24 border-t border-line py-16">
+    <section id={id} className="scroll-mt-24 border-t border-line py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-6">
         <p className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
           <span aria-hidden className="inline-block h-px w-6 bg-accent/60" />
           {eyebrow}
         </p>
-        <h2 className="mt-3 font-heading text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-          {title}
-        </h2>
-        {lead && <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted">{lead}</p>}
+        <h2 className="mt-3 font-heading text-2xl font-bold tracking-tight text-ink sm:text-3xl">{title}</h2>
         <div className="mt-8">{children}</div>
       </div>
     </section>
@@ -40,112 +29,113 @@ function Section({
 }
 
 export default function Home() {
-  const activeExperiments = EXPERIMENTS.filter((e) => e.state === "RUNNING").length;
+  const designed = EXPERIMENTS.filter((e) => e.state === "PLANNED").length;
+  const executed = EXPERIMENTS.filter((e) => e.state !== "PLANNED").length;
+  const results = EXPERIMENTS.filter((e) => e.state === "RUNNING" || e.state === "CONCLUDED").length;
+  const decisions = EXPERIMENTS.filter((e) => Boolean(e.decision)).length;
+  const openExpediente = OPPORTUNITIES.length;
+
+  const steps: CircuitStep[] = [
+    { label: "Señal", state: `${SIGNALS.length} observadas`, tone: "on" },
+    { label: "Problema", state: "detectado", tone: "on" },
+    { label: "Evidencia", state: "clasificada", tone: "on" },
+    { label: "Oportunidad", state: "expediente #001", tone: "on" },
+    { label: "Hipótesis", state: "definida", tone: "on" },
+    { label: "Experimento", state: "diseñado · no lanzado", tone: "on" },
+    { label: "Resultado", state: "sin datos", tone: "empty" },
+    { label: "Decisión", state: "pendiente", tone: "empty" },
+  ];
+
+  const heroStats = [
+    { v: String(SIGNALS.length), l: "señales" },
+    { v: String(openExpediente), l: "expediente" },
+    { v: String(designed), l: "experimento listo" },
+    { v: String(results), l: "resultados" },
+  ];
 
   return (
     <>
-      {/* Hero — la tesis */}
+      {/* Hero — estado operativo, no pitch */}
       <div className="relative isolate">
         <section className="mx-auto max-w-6xl px-6 pb-16 pt-16 sm:pt-24">
           <p className="font-mono text-sm text-muted">
-            <span className="text-accent">~/versionlimitada</span> $ máquina de evidencia —{" "}
-            <span className="text-dim">build what proves itself</span>
+            <span className="text-accent">~/versionlimitada</span> $ máquina de evidencia
           </p>
-          <h1 className="mt-5 max-w-3xl font-heading text-4xl font-bold leading-[1.04] tracking-tight sm:text-6xl">
+          <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-accent">máquina de evidencia</p>
+          <h1 className="mt-3 max-w-3xl font-heading text-4xl font-bold leading-[1.04] tracking-tight sm:text-6xl">
             No construimos lo que suena bien.{" "}
             <span className="text-accent">Construimos lo que se demuestra.</span>
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-            VersionLimitada encuentra problemas reales, reúne evidencia, prueba
-            hipótesis y decide qué merece ser construido. Aquí no se vende hype:
-            se muestra qué se observó, qué se supuso, qué se probó y qué ocurrió.
-          </p>
+
+          {/* Estado operativo inline */}
+          <div className="mt-10 grid max-w-2xl grid-cols-2 gap-px overflow-hidden rounded-[10px] border border-line bg-linesoft sm:grid-cols-4">
+            {heroStats.map((s) => (
+              <div key={s.l} className="bg-panel px-5 py-4">
+                <p className="font-mono text-3xl font-bold text-ink">{s.v}</p>
+                <p className="mt-1 font-heading text-xs font-semibold uppercase tracking-wide text-muted">{s.l}</p>
+              </div>
+            ))}
+          </div>
+
           <div className="mt-8 flex flex-wrap gap-3">
             <a
               href="#expediente"
               className="inline-flex items-center rounded-[10px] bg-accent px-5 py-3 font-heading text-sm font-bold text-paper transition hover:bg-accenthover"
             >
-              Ver el expediente #001 →
+              Ver expediente #001 →
             </a>
             <a
               href="#senal"
               className="inline-flex items-center rounded-[10px] border border-line px-5 py-3 font-heading text-sm font-semibold text-ink transition hover:border-accent/60 hover:text-accent"
             >
-              Radar de señales
+              Ver radar
             </a>
-          </div>
-          <div className="mt-8 flex max-w-2xl flex-wrap items-center gap-3">
-            <ProvenanceKey />
           </div>
         </section>
       </div>
 
       <div className="mx-auto max-w-6xl px-6">
-        {/* La cadena */}
-        <section className="border-t border-line py-14">
-          <div className="flex items-end justify-between gap-4 pb-6">
-            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
-              la cadena · cómo opera la máquina
+        {/* La cadena — circuito interno con estados visibles */}
+        <section className="border-t border-line py-14 sm:py-16">
+          <div className="mx-auto max-w-3xl lg:grid lg:grid-cols-[1fr_1.15fr] lg:gap-10">
+            <p className="mb-3 max-w-xs font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+              el circuito<br />del problema a la decisión
             </p>
-            <p className="hidden font-mono text-[11px] text-dim sm:block">
-              señal → problema → evidencia → oportunidad → hipótesis → experimento → resultado → decisión
-            </p>
+            <Pipeline steps={steps} />
           </div>
-          <Pipeline />
-          <p className="mt-4 font-mono text-[11px] leading-relaxed text-dim">{NOTE}</p>
         </section>
 
-        {/* Estado de la máquina */}
-        <Section
-          id="estado"
-          eyebrow="estado · la máquina ahora"
-          title="Estado de la máquina"
-          lead="Las cifras son las que realmente existen hoy. Si algo no tiene datos, no se inventa."
-        >
-          <Estado
-            signals={SIGNALS.length}
-            problems={OPPORTUNITIES.length}
-            activeExperiments={activeExperiments}
-          />
+        {/* Estado del sistema */}
+        <Section id="estado" eyebrow="estado · ahora" title="Estado del sistema">
+          <div className="max-w-xl">
+            <Estado
+              signals={SIGNALS.length}
+              problems={openExpediente}
+              designed={designed}
+              executed={executed}
+              results={results}
+              decisions={decisions}
+            />
+          </div>
         </Section>
 
         {/* Radar de señales */}
-        <Section
-          id="senal"
-          eyebrow="radar · entrada de la máquina"
-          title="Radar de señales"
-          lead="Señales de dolor observable con origen y fuente pública. La máquina no junta ocurrencias: junta afirmaciones que se pueden verificar."
-        >
+        <Section id="senal" eyebrow="radar · observamos" title="Radar de señales">
           <Signals signals={SIGNALS} />
         </Section>
 
-        {/* Expediente */}
-        <Section
-          id="expediente"
-          eyebrow="expediente · caso abierto"
-          title="Expediente #001"
-          lead="Cuando una señal reúne evidencia, se abre un expediente. Cada afirmación declara su naturaleza — observada, inferida, estimada o propuesta por la máquina — y la decisión build / iterate / kill queda pendiente de resultados."
-        >
+        {/* Expediente #001 */}
+        <Section id="expediente" eyebrow="expediente · investigamos" title="Expediente #001">
           <Opportunities items={OPPORTUNITIES} experiments={EXPERIMENTS} />
         </Section>
 
         {/* Experimentos */}
-        <Section
-          id="experimentos"
-          eyebrow="probando · experimentation lab"
-          title="Experimentos"
-          lead="Primero se prueba con una oferta y un CTA, antes de construir nada. Mientras no haya un experimento corriendo con tráfico real, se declara la infraestructura lista."
-        >
+        <Section id="experimentos" eyebrow="probamos" title="Experimentos">
           <Experiments items={EXPERIMENTS} />
         </Section>
 
         {/* Cementerio */}
-        <Section
-          id="cementerio"
-          eyebrow="decidiendo · el cementerio"
-          title="Cementerio"
-          lead="Los experimentos que terminan en kill son activos de conocimiento. Si no hay ninguno todavía, se dice."
-        >
+        <Section id="cementerio" eyebrow="matamos" title="Cementerio">
           <Graveyard items={GRAVEYARD} />
         </Section>
       </div>
