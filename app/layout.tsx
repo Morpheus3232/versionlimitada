@@ -8,17 +8,17 @@ const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], display: "swap", variab
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], display: "swap", variable: "--font-jetbrains" });
 
 export const metadata: Metadata = {
-  title: "VersionLimitada — Laboratorio de productos y agentes de IA",
+  title: "VersionLimitada — máquina de evidencia",
   description:
-    "Laboratorio que convierte ideas en realidad: aplicaciones, agentes de IA, herramientas. Incluye un constructor de webs y una guía para patentar ideas, con transparencia total.",
+    "Una máquina que busca dolor real, lo documenta en expedientes, corre experimentos y decide qué merece ser construido. Don't build what sounds good — build what proves itself.",
 };
 
 const NAV = [
   { href: "/", label: "Inicio" },
-  { href: "/#motor", label: "Motor de IA" },
-  { href: "/#herramientas", label: "Herramientas" },
-  { href: "/#proyectos", label: "Proyectos" },
-  { href: "/#radar", label: "Radar de ideas" },
+  { href: "/#senal", label: "Señales" },
+  { href: "/#oportunidades", label: "Expedientes" },
+  { href: "/#experimentos", label: "Experimentos" },
+  { href: "/#cementerio", label: "Cementerio" },
   { href: "/construir", label: "Construir" },
   { href: "/patentes", label: "Patentar" },
   { href: "/transparencia", label: "Transparencia" },
@@ -64,8 +64,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <footer className="border-t border-linesoft">
           <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-10 font-mono text-xs text-dim sm:flex-row sm:items-center">
-            <p>VersionLimitada · base de cómputos · código abierto (MIT)</p>
-            <p>Transparencia total · en síntonia visual con molino.app</p>
+            <p>VersionLimitada · máquina de evidencia · código abierto (MIT)</p>
+            <p>{`Don't build what sounds good · build what proves itself`}</p>
           </div>
         </footer>
       </body>
