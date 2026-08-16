@@ -411,7 +411,19 @@ export function ExpDetail({ id, open }: { id: string; open: Open }) {
         </div>
         {available.length > 0 && (
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-linesoft pt-3">
-            <Select value={pickSignal} onChange={setPickSignal} options={["", ...available.map((s) => s.id)]} />
+            <select
+              aria-label="Elegir señal para enlazar"
+              value={pickSignal}
+              onChange={(e) => setPickSignal(e.target.value)}
+              className="max-w-full rounded-[8px] border border-line bg-paper px-3 py-2 font-mono text-sm text-ink outline-none focus:border-accent"
+            >
+              <option value="" className="bg-panel text-ink">elegí una señal…</option>
+              {available.map((s) => (
+                <option key={s.id} value={s.id} className="bg-panel">
+                  {s.title}
+                </option>
+              ))}
+            </select>
             {pickSignal && (
               <ActionBtn tone="ghost" onClick={() => { linkSignal(exp.id, pickSignal); setPickSignal(""); }}>enlazar señal</ActionBtn>
             )}
@@ -467,7 +479,7 @@ function ExpRunForm({ initial, onDone, onCreated, presetExpedienteId }: {
     method: initial?.method ?? "",
     metricPrimary: initial?.metricPrimary ?? "",
     metricSecondary: initial?.metricSecondary ?? "",
-    status: (initial?.status ?? "NO_DISEÑADO") as Experiment["status"],
+    status: (initial?.status ?? "DISEÑADO") as Experiment["status"],
     expedienteId: initial?.expedienteId ?? presetExpedienteId ?? "",
   });
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
@@ -505,16 +517,25 @@ function ExpRunForm({ initial, onDone, onCreated, presetExpedienteId }: {
           </select>
         </Field>
       )}
-      <Field label="hipótesis"><Area value={f.hypothesis} onChange={(v) => set("hypothesis", v)} /></Field>
-      <Field label="oferta / intervención"><Area value={f.offer} onChange={(v) => set("offer", v)} rows={2} /></Field>
-      <Field label="método"><Area value={f.method} onChange={(v) => set("method", v)} rows={2} /></Field>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="métrica principal"><Input value={f.metricPrimary} onChange={(v) => set("metricPrimary", v)} /></Field>
-        <Field label="métrica secundaria"><Input value={f.metricSecondary} onChange={(v) => set("metricSecondary", v)} /></Field>
-      </div>
-      <Field label="estado">
-        <Select value={f.status} onChange={(v) => set("status", v)} options={EXP_STATUS_OPTIONS} />
-      </Field>
+      {!initial && (
+        <p className="rounded-[8px] border border-linesoft bg-paper px-3 py-2 font-mono text-[11px] text-dim">
+          Con el nombre alcanza para crearlo. Hipótesis, oferta y método se completan después, cuando entres al experimento.
+        </p>
+      )}
+      {initial && (
+        <>
+          <Field label="hipótesis"><Area value={f.hypothesis} onChange={(v) => set("hypothesis", v)} /></Field>
+          <Field label="oferta / intervención"><Area value={f.offer} onChange={(v) => set("offer", v)} rows={2} /></Field>
+          <Field label="método"><Area value={f.method} onChange={(v) => set("method", v)} rows={2} /></Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="métrica principal"><Input value={f.metricPrimary} onChange={(v) => set("metricPrimary", v)} /></Field>
+            <Field label="métrica secundaria"><Input value={f.metricSecondary} onChange={(v) => set("metricSecondary", v)} /></Field>
+          </div>
+          <Field label="estado">
+            <Select value={f.status} onChange={(v) => set("status", v)} options={EXP_STATUS_OPTIONS} />
+          </Field>
+        </>
+      )}
       <div className="flex justify-end gap-2">
         <ActionBtn tone="ghost" onClick={onDone}>cancelar</ActionBtn>
         <ActionBtn onClick={submit}>{initial ? "Guardar" : "Crear experimento"}</ActionBtn>
