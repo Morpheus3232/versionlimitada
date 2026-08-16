@@ -7,7 +7,6 @@ import type {
   Experiment,
   Expediente,
   GraveEntry,
-  Provenance,
   Signal,
 } from "@/lib/lab/state";
 import { useLab } from "@/components/lab/LabContext";
@@ -20,11 +19,9 @@ import {
   ExpStatusBadge,
   Field,
   Input,
-  PROVENANCE_OPTIONS,
   ProvenanceBadge,
   Select,
   SignalStatusBadge,
-  Tags,
 } from "@/components/lab/ui";
 
 export type LabView = "dashboard" | "radar" | "expedientes" | "experimentos" | "cementerio" | "guia";
@@ -140,49 +137,22 @@ export function Dashboard({ go }: { go: Go }) {
 function SignalForm({ initial, onDone }: { initial?: Signal; onDone: () => void }) {
   const { createSignal, updateSignal } = useLab();
   const [missing, setMissing] = useState<string[]>([]);
-  const [f, setF] = useState({
-    title: initial?.title ?? "",
-    problem: initial?.problem ?? "",
-    source: initial?.source ?? "",
-    url: initial?.url ?? "",
-    sourceType: initial?.sourceType ?? "comunidades",
-    evidence: (initial?.evidence ?? "OBSERVED") as Provenance,
-    notes: initial?.notes ?? "",
-    tags: initial?.tags ?? [] as string[],
-  });
-  const set = (k: string, v: string | string[]) => setF((p) => ({ ...p, [k]: v }));
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [problem, setProblem] = useState(initial?.problem ?? "");
   const submit = () => {
     const faltan: string[] = [];
-    if (!f.title.trim()) faltan.push("título");
-    if (!f.problem.trim()) faltan.push("problema observado");
+    if (!title.trim()) faltan.push("título");
+    if (!problem.trim()) faltan.push("descripción");
     setMissing(faltan);
     if (faltan.length) return;
-    if (initial) updateSignal(initial.id, f);
-    else createSignal({ ...f, foundBy: "" });
+    if (initial) updateSignal(initial.id, { title, problem });
+    else createSignal({ title, problem });
     onDone();
   };
   return (
     <div className="space-y-3">
-      <Field label="título">
-        <Input value={f.title} onChange={(v) => set("title", v)} placeholder="lo que se observa" />
-      </Field>
-      <Field label="problema observado">
-        <Area value={f.problem} onChange={(v) => set("problem", v)} />
-      </Field>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="fuente" hint="(opcional)"><Input value={f.source} onChange={(v) => set("source", v)} /></Field>
-        <Field label="url" hint="(opcional)"><Input value={f.url} onChange={(v) => set("url", v)} placeholder="link" /></Field>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="tipo de fuente">
-          <Select value={f.sourceType} onChange={(v) => set("sourceType", v)} options={["foro", "product hunt", "show hn", "reviews", "comunidades", "prensa", "cliente", "otro"]} />
-        </Field>
-        <Field label="estado epistemológico">
-          <Select value={f.evidence} onChange={(v) => set("evidence", v as Provenance)} options={PROVENANCE_OPTIONS} />
-        </Field>
-      </div>
-      <Field label="notas"><Area value={f.notes} onChange={(v) => set("notes", v)} rows={2} /></Field>
-      <Field label="tags"><Tags value={f.tags} onChange={(v) => set("tags", v)} /></Field>
+      <Field label="título de la idea"><Input value={title} onChange={setTitle} placeholder="¿qué notaste?" /></Field>
+      <Field label="descripción"><Area value={problem} onChange={setProblem} placeholder="explicá en un párrafo qué pasa y por qué importa (puede ser simple)" /></Field>
       {missing.length > 0 && (
         <p role="alert" className="rounded-[8px] border border-gold/40 bg-paper px-3 py-2 font-mono text-[11px] text-gold">
           falta: {missing.join(", ")}
@@ -190,7 +160,7 @@ function SignalForm({ initial, onDone }: { initial?: Signal; onDone: () => void 
       )}
       <div className="flex justify-end gap-2">
         <ActionBtn tone="ghost" onClick={onDone}>cancelar</ActionBtn>
-        <ActionBtn onClick={submit}>{initial ? "Guardar" : "Crear señal"}</ActionBtn>
+        <ActionBtn onClick={submit}>{initial ? "Guardar" : "Agregar señal"}</ActionBtn>
       </div>
     </div>
   );
