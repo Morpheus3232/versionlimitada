@@ -27,7 +27,7 @@ import {
   Tags,
 } from "@/components/lab/ui";
 
-export type LabView = "dashboard" | "radar" | "expedientes" | "experimentos" | "cementerio";
+export type LabView = "dashboard" | "radar" | "expedientes" | "experimentos" | "cementerio" | "guia";
 export type Go = (view: LabView, intent?: string) => void;
 export type Open = (view: LabView, id: string) => void;
 
@@ -767,5 +767,104 @@ function GraveCard({ g, editing, onEdit, onSave, onDelete }: {
         </div>
       )}
     </article>
+  );
+}
+// ─── Guía / cómo usar ───────────────────────────────────────────────────────
+
+export function Guia() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">guía fácil</p>
+        <h1 className="mt-1 font-heading text-2xl font-bold text-ink sm:text-3xl">Cómo se usa esto, en simple</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+          Piénsalo como una libreta del taller. Cuando alguien ve un problema, lo anotamos.
+          Después vemos si vale la pena arreglarlo. Y al final decimos: <strong className="text-ink">lo hacemos</strong>,{" "}
+          <strong className="text-ink">lo probamos otra vez</strong> o <strong className="text-ink">lo tiramos</strong>.
+        </p>
+      </div>
+
+      <div className="rounded-[10px] border border-line bg-panel p-5">
+        <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">los pasos, uno por uno</p>
+        <div className="space-y-4">
+          <Step n={1} tab="radar" t="Anotá lo que viste." d="Si notás algo que molesta o que va lento, escríbelo acá. No hace falta que sea perfecto." e="ej: «la gente arma sus cuentas a mano en papel»" />
+          <Step n={2} tab="radar" t="Guardá la prueba." d="Poné de dónde lo viste y cuándo. Así después no nos olvidamos por qué lo anotamos." />
+          <Step n={3} tab="radar" t="Hazlo ficha." d="Tocá «convertir en expediente» y la anotación se vuelve una ficha de investigación con todo ya cargado." />
+          <Step n={4} tab="expedientes" t="Explicá la ficha." d="Contá qué está pasando, qué sabemos y qué querés comprobar. Con palabras tuyas y simples." />
+          <Step n={5} tab="experimentos" t="Inventá una prueba." d="Pensá una forma chica de saber si es verdad. Por ejemplo: una página con un botón y mirar si la gente lo toca." />
+          <Step n={6} tab="experimentos" t="Hacé la prueba." d="Poné el estado en «corriendo» y déjalá andar un tiempo." />
+          <Step n={7} tab="experimentos" t="Anotá qué pasó." d="Escribí qué esperabas y qué pasó de verdad. Y aparte, qué creés que significa. Son dos cosas distintas." />
+          <Step n={8} tab="experimentos" t="Decidí." d="¿Se hace? ¿Se prueba otra vez? ¿Se tira? Elegí y dejá el motivo." />
+          <Step n={9} tab="cementerio" t="Lo que se tira, va al Cementerio." d="Si una prueba no funcionó, queda guardada con «por qué» y «qué aprendimos». Sirve para no equivocarnos dos veces con lo mismo." />
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-[10px] border border-line bg-panel p-5">
+          <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">las etiquetas de la evidencia</p>
+          <div className="space-y-3 text-sm text-muted">
+            <p><BadgeC k="OBSERVED" t="Visto" /> <span className="ml-2">Lo vimos nosotros mismos, con fuente y fecha. Esto es lo que vale como cierto.</span></p>
+            <p><BadgeC k="INFERRED" t="Pensado" /> <span className="ml-2">Lo dedujimos mirando las cosas. Es una buena idea, pero no una prueba.</span></p>
+            <p><BadgeC k="ESTIMATED" t="Calculado" /> <span className="ml-2">Un número que sacamos por encima, con suposiciones. Sirve para hacerse una idea, no para confirmar.</span></p>
+            <p><BadgeC k="GENERATED" t="Dicho por la máquina" /> <span className="ml-2">Lo sugirió una computadora. Todavía no cuenta como prueba.</span></p>
+          </div>
+        </div>
+        <div className="rounded-[10px] border border-line bg-panel p-5">
+          <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">las decisiones</p>
+          <div className="space-y-3 text-sm text-muted">
+            <p><BadgeC k="BUILD" t="Hacerlo" /> <span className="ml-2">Hay pruebas suficientes: se construye.</span></p>
+            <p><BadgeC k="ITERATE" t="Otro intento" /> <span className="ml-2">Hay señales pero hay que ajustar y probar de nuevo.</span></p>
+            <p><BadgeC k="KILL" t="Tirarlo" /> <span className="ml-2">No funcionó: se descarta y se aprende algo.</span></p>
+            <p><BadgeC k="PENDING" t="No sabemos" /> <span className="ml-2">Todavía no hay pruebas para decidir. Eso también está bien.</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-[10px] border border-line bg-panel p-5">
+        <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">reglas sencillas</p>
+        <ul className="space-y-2 text-sm leading-relaxed text-muted">
+          <li>· <span className="text-ink">Lo que pasó no es lo mismo que lo que creemos.</span> Por eso van en casilleros separados.</li>
+          <li>· <span className="text-ink">La máquina no decide por nosotros.</span> Solo sugiere; la decisión la tomamos nosotros.</li>
+          <li>· <span className="text-ink">No inventamos números.</span> Si todavía no hay datos, se ve vacío, y está bien.</li>
+          <li>· <span className="text-ink">Por ahora se guarda en este navegador.</span> Si lo abrís en otra computadora, no está. (Compartir entre máquinas viene después.)</li>
+          <li>· <span className="text-ink">Si te equivocaste, se arregla.</span> Todo se puede editar, y se guarda el historial de quién cambió qué.</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function Step({ n, tab, t, d, e }: { n: number; tab: string; t: string; d: string; e?: string }) {
+  return (
+    <div className="flex gap-3">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-accent/60 font-mono text-sm text-accent">{n}</span>
+      <div className="min-w-0">
+        <p className="font-heading text-base font-bold text-ink">
+          {t}{" "}
+          <span className="rounded-[4px] border border-line px-1.5 py-0.5 align-middle font-mono text-[10px] uppercase tracking-widest text-muted">{tab}</span>
+        </p>
+        <p className="mt-1 text-sm leading-relaxed text-muted">{d}</p>
+        {e && <p className="mt-1 font-mono text-[11px] text-dim">{e}</p>}
+      </div>
+    </div>
+  );
+}
+
+const TONE: Record<string, string> = {
+  OBSERVED: "border-accent/50 text-accent",
+  INFERRED: "border-line text-muted",
+  ESTIMATED: "border-gold/50 text-gold",
+  GENERATED: "border-dashed border-line text-dim",
+  BUILD: "border-gold/60 text-gold",
+  ITERATE: "border-accent/60 text-accent",
+  KILL: "border-red-900 text-red-400",
+  PENDING: "border-line text-dim",
+};
+
+function BadgeC({ k, t }: { k: string; t: string }) {
+  return (
+    <span className={`inline-flex items-center rounded-[5px] border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest ${TONE[k] ?? "border-line text-dim"}`}>
+      {t}
+    </span>
   );
 }

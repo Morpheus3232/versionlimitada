@@ -9,6 +9,7 @@ import {
   ExpDetailView,
   Experimentos,
   Expedientes,
+  Guia,
   Radar,
   type Go,
   type LabView,
@@ -21,6 +22,7 @@ const TABS: { id: LabView; label: string }[] = [
   { id: "expedientes", label: "Expedientes" },
   { id: "experimentos", label: "Experimentos" },
   { id: "cementerio", label: "Cementerio" },
+  { id: "guia", label: "Cómo usar" },
 ];
 
 export default function LabApp() {
@@ -58,6 +60,7 @@ export default function LabApp() {
   else if (view === "expedientes") body = selected ? <ExpDetail id={selected} open={open} /> : <Expedientes intent={intent} open={open} />;
   else if (view === "experimentos") body = selected ? <ExpDetailView id={selected} open={open} /> : <Experimentos intent={intent} open={open} />;
   else body = <Cementerio />;
+  if (view === "guia") body = <Guia />;
 
   return (
     <div className="mx-auto max-w-6xl px-6 pb-16">
