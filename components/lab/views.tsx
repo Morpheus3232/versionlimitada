@@ -10,6 +10,7 @@ import type {
   Signal,
 } from "@/lib/lab/state";
 import { useLab } from "@/components/lab/LabContext";
+import InlineAI from "@/components/lab/InlineAI";
 import {
   ActionBtn,
   Area,
@@ -62,6 +63,26 @@ function Hist({ history }: { history: Signal["history"] }) {
       ))}
     </ul>
   );
+}
+
+function StepC({ done, label }: { done: boolean; label: string }) {
+  return <span className={done ? "text-accent" : "text-dim"}>{done ? "✓" : "○"} {label}</span>;
+}
+
+function nextStep(ex: Experiment): string {
+  if (!ex.result) {
+    return "Registrá el resultado: tocá “registrar resultado” y escribí qué esperabas y qué pasó de verdad.";
+  }
+  if (!ex.decision || ex.decision.value === "PENDING") {
+    return "Registrá la decisión: tocá “registrar decisión” y elegí build (se hace), iterate (se ajusta) o kill (se tira).";
+  }
+  if (ex.decision.value === "KILL" && ex.status !== "KILLED") {
+    return "Decidiste kill: tocá “matar →” para guardarlo en el cementerio, con qué falló y qué aprendiste.";
+  }
+  if (ex.decision.value === "ITERATE") {
+    return "Decidiste iterate: ajustá la hipótesis (editar) y diseñá la siguiente ronda de prueba.";
+  }
+  return "Listo: este experimento quedó cerrado. Revisá el historial o el cementerio.";
 }
 
 // ─── Dashboard ──────────────────────────────────────────────────────────────
@@ -399,8 +420,23 @@ export function ExpDetail({ id, open }: { id: string; open: Open }) {
         </div>
       )}
 
-      <Panel title={`señales (${signals.length})`}>
-        <div className="space-y-2">
+      <InlineAI
+        promptDefault={`¿Qué le fallaría a esta investigación y qué experimento chico probarías? Expediente: ${exp.title}.`}
+        context={{
+          expediente: {
+            numero: exp.number,
+            titulo: exp.title,
+            problema: exp.problem,
+            evidencia: exp.evidence,
+            oportunidad: exp.opportunity,
+            hipotesis: exp.hypothesis,
+          },
+          señales_enlazadas: signals.map((s) => ({ titulo: s.title, observacion: s.problem })),
+          experimentos: experiments.map((x) => ({ nombre: x.name, estado: x.status, decision: x.decision?.value ?? null })),
+        }}
+      />
+
+      <Panel title={`señales (${signals.length})`}>        <div className="space-y-2">
           {signals.map((s) => (
             <div key={s.id} className="flex items-center justify-between gap-3 rounded-[8px] border border-linesoft bg-paper px-3 py-2">
               <span className="text-sm text-muted">{s.title}</span>
@@ -614,6 +650,19 @@ export function ExpDetailView({ id, open }: { id: string; open: Open }) {
         </p>
       )}
 
+      {/* Siguiente paso: guía clara para no quedarse trabado */}
+      <div className="rounded-[10px] border border-accent/40 bg-panel p-4">
+        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] text-dim">
+          <StepC done={Boolean(ex.result)} label="resultado" />
+          <StepC done={Boolean(ex.decision && ex.decision.value !== "PENDING")} label="decisión" />
+          <StepC done={ex.status === "KILLED"} label="cementerio" />
+        </div>
+        <p className="text-sm leading-relaxed text-muted">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-accent">siguiente paso · </span>
+          {nextStep(ex)}
+        </p>
+      </div>
+
       {editing ? (
         <Panel title="editar experimento"><ExpRunForm initial={ex} onDone={() => setEditing(false)} /></Panel>
       ) : (
@@ -641,8 +690,25 @@ export function ExpDetailView({ id, open }: { id: string; open: Open }) {
         </ActionBtn>
       </div>
 
-      {showResult && <ResultForm ex={ex} onSubmit={(r) => { setResult(ex.id, r); setShowResult(false); }} />}
-      {showDecision && <DecisionForm ex={ex} member={member} onSubmit={(d) => { setDecision(ex.id, d); setShowDecision(false); }} />}
+      <InlineAI
+        promptDefault={`¿Este experimento está bien planteado? ¿qué le cambiarías o qué riesgo ves? Experiment: ${ex.name}.`}
+        context={{
+          experimento: {
+            numero: ex.number,
+            nombre: ex.name,
+            hipotesis: ex.hypothesis,
+            oferta: ex.offer,
+            metodo: ex.method,
+            metricaPrincipal: ex.metricPrimary,
+            estado: ex.status,
+            decision: ex.decision?.value ?? null,
+          },
+          expediente: exp ? { numero: exp.number, titulo: exp.title, hipotesis: exp.hypothesis } : null,
+        }}
+      />
+
+      {showResult && <ResultForm ex={ex} onSubmit={(r) => { setResult(ex.id, r); if (ex.status !== "KILLED") setStatus(ex.id, "TERMINADO"); setShowResult(false); }} />}
+      {showDecision && <DecisionForm ex={ex} member={member} onSubmit={(d) => { setDecision(ex.id, d); if (d.value !== "PENDING" && ex.status !== "KILLED") setStatus(ex.id, "TERMINADO"); setShowResult(false); setShowDecision(false); }} />}
 
       {ex.result && !showResult && (
         <Panel title="resultado registrado">
@@ -709,7 +775,7 @@ function DecisionForm({ ex, member, onSubmit }: {
   onSubmit: (d: Experiment["decision"] & {}) => void;
 }) {
   const [f, setF] = useState({
-    value: (ex.decision?.value ?? "PENDING") as DecisionResult,
+    value: (ex.decision?.value ?? "") as DecisionResult | "",
     date: ex.decision?.date ?? new Date().toISOString().slice(0, 10),
     by: ex.decision?.by ?? member,
     reason: ex.decision?.reason ?? "",
@@ -717,10 +783,26 @@ function DecisionForm({ ex, member, onSubmit }: {
     aprendizaje: ex.decision?.aprendizaje ?? "",
   });
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
+  const ready = f.value !== "";
   return (
     <Panel title="registrar decisión">
+      <p className="mb-3 rounded-[8px] border border-linesoft bg-paper px-3 py-2 font-mono text-[11px] text-dim">
+        build = se hace · iterate = se ajusta y se vuelve a probar · kill = se tira al cementerio ·
+        pending = todavía no sabemos (úsala solo si de verdad no hay evidencia)
+      </p>
       <div className="grid gap-3 sm:grid-cols-3">
-        <Field label="decisión"><Select value={f.value} onChange={(v) => set("value", v)} options={DECISION_OPTIONS} /></Field>
+        <Field label="decisión">
+          <select
+            className="w-full rounded-[8px] border border-line bg-paper px-3 py-2 font-mono text-sm text-ink outline-none focus:border-accent"
+            value={f.value}
+            onChange={(e) => set("value", e.target.value)}
+          >
+            <option value="" className="bg-panel text-dim">elegí…</option>
+            {DECISION_OPTIONS.map((d) => (
+              <option key={d} value={d} className="bg-panel text-ink">{d}</option>
+            ))}
+          </select>
+        </Field>
         <Field label="fecha"><Input value={f.date} onChange={(v) => set("date", v)} /></Field>
         <Field label="responsable"><Input value={f.by} onChange={(v) => set("by", v)} /></Field>
       </div>
@@ -729,7 +811,9 @@ function DecisionForm({ ex, member, onSubmit }: {
         <Field label="evidencia utilizada"><Area value={f.evidenceUsed} onChange={(v) => set("evidenceUsed", v)} rows={1} /></Field>
         <Field label="aprendizaje"><Area value={f.aprendizaje} onChange={(v) => set("aprendizaje", v)} rows={2} /></Field>
       </div>
-      <div className="mt-3 flex justify-end"><ActionBtn onClick={() => onSubmit(f)}>guardar decisión</ActionBtn></div>
+      <div className="mt-3 flex justify-end">
+        <ActionBtn onClick={() => { if (ready) onSubmit(f as Experiment["decision"] & {}); }}>guardar decisión</ActionBtn>
+      </div>
     </Panel>
   );
 }

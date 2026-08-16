@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useLab } from "@/components/lab/LabContext";
+import Assistant from "@/components/lab/Assistant";
 import {
   Cementerio,
   Dashboard,
@@ -94,8 +95,11 @@ export default function LabApp() {
         ))}
       </nav>
 
-      {results && (
-        <section aria-label="Resultados de búsqueda" className="mt-5 rounded-[10px] border border-line bg-panel p-5">
+      <div className="mt-4 max-w-2xl">
+        <Assistant />
+      </div>
+
+      {results && (        <section aria-label="Resultados de búsqueda" className="mt-5 rounded-[10px] border border-line bg-panel p-5">
           <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
             resultados para “{query}”
           </p>
