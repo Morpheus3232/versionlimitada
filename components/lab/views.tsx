@@ -139,6 +139,7 @@ export function Dashboard({ go }: { go: Go }) {
 // ─── Radar de señales ───────────────────────────────────────────────────────
 function SignalForm({ initial, onDone }: { initial?: Signal; onDone: () => void }) {
   const { createSignal, updateSignal } = useLab();
+  const [missing, setMissing] = useState<string[]>([]);
   const [f, setF] = useState({
     title: initial?.title ?? "",
     problem: initial?.problem ?? "",
@@ -151,7 +152,11 @@ function SignalForm({ initial, onDone }: { initial?: Signal; onDone: () => void 
   });
   const set = (k: string, v: string | string[]) => setF((p) => ({ ...p, [k]: v }));
   const submit = () => {
-    if (!f.title.trim() || !f.problem.trim() || !f.source.trim()) return;
+    const faltan: string[] = [];
+    if (!f.title.trim()) faltan.push("título");
+    if (!f.problem.trim()) faltan.push("problema observado");
+    setMissing(faltan);
+    if (faltan.length) return;
     if (initial) updateSignal(initial.id, f);
     else createSignal({ ...f, foundBy: "" });
     onDone();
@@ -165,8 +170,8 @@ function SignalForm({ initial, onDone }: { initial?: Signal; onDone: () => void 
         <Area value={f.problem} onChange={(v) => set("problem", v)} />
       </Field>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="fuente"><Input value={f.source} onChange={(v) => set("source", v)} /></Field>
-        <Field label="url"><Input value={f.url} onChange={(v) => set("url", v)} placeholder="link (opcional)" /></Field>
+        <Field label="fuente" hint="(opcional)"><Input value={f.source} onChange={(v) => set("source", v)} /></Field>
+        <Field label="url" hint="(opcional)"><Input value={f.url} onChange={(v) => set("url", v)} placeholder="link" /></Field>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="tipo de fuente">
@@ -178,6 +183,11 @@ function SignalForm({ initial, onDone }: { initial?: Signal; onDone: () => void 
       </div>
       <Field label="notas"><Area value={f.notes} onChange={(v) => set("notes", v)} rows={2} /></Field>
       <Field label="tags"><Tags value={f.tags} onChange={(v) => set("tags", v)} /></Field>
+      {missing.length > 0 && (
+        <p role="alert" className="rounded-[8px] border border-gold/40 bg-paper px-3 py-2 font-mono text-[11px] text-gold">
+          falta: {missing.join(", ")}
+        </p>
+      )}
       <div className="flex justify-end gap-2">
         <ActionBtn tone="ghost" onClick={onDone}>cancelar</ActionBtn>
         <ActionBtn onClick={submit}>{initial ? "Guardar" : "Crear señal"}</ActionBtn>
