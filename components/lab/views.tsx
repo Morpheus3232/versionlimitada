@@ -394,6 +394,7 @@ export function ExpDetail({ id, open }: { id: string; open: Open }) {
   const exp = state.expedientes.find((e) => e.id === id);
   const [editing, setEditing] = useState(false);
   const [pickSignal, setPickSignal] = useState("");
+  const [showNewExp, setShowNewExp] = useState(false);
 
   if (!exp) return <p className="font-mono text-sm text-dim">Expediente no encontrado.</p>;
 
@@ -459,7 +460,18 @@ export function ExpDetail({ id, open }: { id: string; open: Open }) {
               <ExpStatusBadge status={ex.status} />
             </button>
           ))}
-          {experiments.length === 0 && <p className="font-mono text-[11px] text-dim">Sin experimentos.</p>}
+          {experiments.length === 0 && !showNewExp && <p className="font-mono text-[11px] text-dim">Sin experimentos.</p>}
+        </div>
+        <div className="mt-3 border-t border-linesoft pt-3">
+          {showNewExp ? (
+            <ExpRunForm
+              presetExpedienteId={exp.id}
+              onCreated={(id) => open("experimentos", id)}
+              onDone={() => setShowNewExp(false)}
+            />
+          ) : (
+            <ActionBtn tone="ghost" onClick={() => setShowNewExp(true)}>+ crear experimento acá</ActionBtn>
+          )}
         </div>
       </Panel>
 
@@ -471,7 +483,12 @@ export function ExpDetail({ id, open }: { id: string; open: Open }) {
 }
 
 // ─── Experimentos ───────────────────────────────────────────────────────────
-function ExpRunForm({ initial, onDone }: { initial?: Experiment; onDone: () => void }) {
+function ExpRunForm({ initial, onDone, onCreated, presetExpedienteId }: {
+  initial?: Experiment;
+  onDone: () => void;
+  onCreated?: (id: string) => void;
+  presetExpedienteId?: string;
+}) {
   const { createExperiment, updateExperiment, state } = useLab();
   const [f, setF] = useState({
     name: initial?.name ?? "",
@@ -481,21 +498,43 @@ function ExpRunForm({ initial, onDone }: { initial?: Experiment; onDone: () => v
     metricPrimary: initial?.metricPrimary ?? "",
     metricSecondary: initial?.metricSecondary ?? "",
     status: (initial?.status ?? "NO_DISEÑADO") as Experiment["status"],
-    expedienteId: initial?.expedienteId ?? "",
+    expedienteId: initial?.expedienteId ?? presetExpedienteId ?? "",
   });
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   const submit = () => {
     if (!f.name.trim()) return;
     if (initial) updateExperiment(initial.id, { ...f, expedienteId: f.expedienteId || undefined });
-    else createExperiment({ ...f, expedienteId: f.expedienteId || undefined });
+    else {
+      const id = createExperiment({ ...f, expedienteId: f.expedienteId || undefined });
+      onCreated?.(id);
+    }
     onDone();
   };
   return (
     <div className="space-y-3">
       <Field label="nombre"><Input value={f.name} onChange={(v) => set("name", v)} /></Field>
-      <Field label="expediente relacionado">
-        <Select value={f.expedienteId} onChange={(v) => set("expedienteId", v)} options={["", ...state.expedientes.map((e) => e.id)]} />
-      </Field>
+      {presetExpedienteId ? (
+        <Field label="expediente relacionado">
+          <p className="rounded-[8px] border border-line bg-paper px-3 py-2 font-mono text-sm text-muted">
+            fijo: nº {String(state.expedientes.find((e) => e.id === presetExpedienteId)?.number ?? "").padStart(3, "0")}
+          </p>
+        </Field>
+      ) : (
+        <Field label="expediente relacionado">
+          <select
+            className="w-full rounded-[8px] border border-line bg-paper px-3 py-2 font-mono text-sm text-ink outline-none focus:border-accent"
+            value={f.expedienteId}
+            onChange={(e) => set("expedienteId", e.target.value)}
+          >
+            <option value="" className="bg-panel text-ink">sin expediente</option>
+            {state.expedientes.map((e) => (
+              <option key={e.id} value={e.id} className="bg-panel text-ink">
+                nº {String(e.number).padStart(3, "0")} · {e.title || "(sin título)"}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
       <Field label="hipótesis"><Area value={f.hypothesis} onChange={(v) => set("hypothesis", v)} /></Field>
       <Field label="oferta / intervención"><Area value={f.offer} onChange={(v) => set("offer", v)} rows={2} /></Field>
       <Field label="método"><Area value={f.method} onChange={(v) => set("method", v)} rows={2} /></Field>
