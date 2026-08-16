@@ -12,6 +12,14 @@ const STAGES: { id: Stage; label: string }[] = [
   { id: "descartado", label: "Descartado" },
 ];
 
+const STAGE_NEXT: Record<Stage, Stage> = {
+  idea: "hipotesis",
+  hipotesis: "mvc",
+  mvc: "vivo",
+  vivo: "vivo",
+  descartado: "descartado",
+};
+
 const STORAGE_KEY = "vl.ideas.v1";
 
 type Idea = { id: string; title: string; stage: Stage; created: number };
@@ -51,19 +59,35 @@ export default function IdeaBoard() {
   };
 
   const advance = (id: string) => {
-    const next = ideas.map((i) => {
-      if (i.id !== id) return i;
-      const idx = STAGES.findIndex((s) => s.id === i.stage);
-      const nextStage = STAGES[Math.min(idx + 1, STAGES.length - 1)].id;
-      return { ...i, stage: nextStage as Stage };
-    });
-    persist(next);
+    persist(
+      ideas.map((i) => (i.id === id ? { ...i, stage: STAGE_NEXT[i.stage] } : i)),
+    );
   };
 
-  const kill = (id: string) => persist(ideas.filter((i) => i.id !== id));
+  const discard = (id: string) => {
+    persist(
+      ideas.map((i) => (i.id === id ? { ...i, stage: "descartado" } : i)),
+    );
+  };
+
+  const restore = (id: string) => {
+    persist(
+      ideas.map((i) => (i.id === id ? { ...i, stage: "idea" } : i)),
+    );
+  };
+
+  const remove = (id: string) => {
+    persist(ideas.filter((i) => i.id !== id));
+  };
 
   const counts = useMemo(() => {
-    const c: Record<Stage, number> = { idea: 0, hipotesis: 0, mvc: 0, vivo: 0, descartado: 0 };
+    const c: Record<Stage, number> = {
+      idea: 0,
+      hipotesis: 0,
+      mvc: 0,
+      vivo: 0,
+      descartado: 0,
+    };
     ideas.forEach((i) => (c[i.stage] += 1));
     return c;
   }, [ideas]);
@@ -74,7 +98,7 @@ export default function IdeaBoard() {
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Capturá una idea — se guarda en tu navegador"
+          placeholder="Capturá una idea — vive en tu navegador"
           aria-label="Nueva idea"
           className="flex-1 rounded-[10px] border border-line bg-panel px-4 py-3 font-mono text-sm text-ink placeholder-dim outline-none focus:border-accent"
         />
@@ -89,7 +113,12 @@ export default function IdeaBoard() {
       <div className="mt-6 flex flex-wrap gap-2 text-xs text-dim">
         {STAGES.map((s) => (
           <span key={s.id} className="inline-flex items-center gap-1.5">
-            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-muted" />
+            <span
+              aria-hidden
+              className={`h-1.5 w-1.5 rounded-full ${
+                counts[s.id] > 0 ? "bg-accent" : "bg-muted"
+              }`}
+            />
             {s.label} {counts[s.id]}
           </span>
         ))}
@@ -103,34 +132,56 @@ export default function IdeaBoard() {
         )}
         {ideas.map((i) => {
           const stage = STAGES.find((s) => s.id === i.stage)!;
+          const discarded = i.stage === "descartado";
           return (
             <li
               key={i.id}
               className="flex items-center justify-between gap-4 rounded-[10px] border border-line bg-panel px-4 py-3"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm text-ink">{i.title}</p>
+                <p
+                  className={`truncate text-sm ${
+                    discarded ? "text-dim line-through" : "text-ink"
+                  }`}
+                >
+                  {i.title}
+                </p>
                 <p className="mt-0.5 font-mono text-xs text-dim">
                   {new Date(i.created).toLocaleDateString("es-AR")}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <span className="font-mono text-xs text-muted">{stage.label}</span>
-                {i.stage !== "descartado" && i.stage !== "vivo" && (
+                <span
+                  className={`font-mono text-xs ${
+                    discarded ? "text-dim" : "text-muted"
+                  }`}
+                >
+                  {stage.label}
+                </span>
+                {discarded ? (
                   <button
-                    onClick={() => advance(i.id)}
-                    aria-label="Avanzar de etapa"
-                    className="rounded-[6px] border border-line px-2 py-1 font-mono text-xs text-muted transition hover:border-accent/60 hover:text-accent"
+                    onClick={() => restore(i.id)}
+                    className="rounded-[6px] border border-line px-2 py-1 font-mono text-xs text-muted transition hover:border-gold/60 hover:text-gold"
                   >
-                    avanzar
+                    restaurar
                   </button>
+                ) : (
+                  i.stage !== "vivo" && (
+                    <button
+                      onClick={() => advance(i.id)}
+                      className="rounded-[6px] border border-line px-2 py-1 font-mono text-xs text-muted transition hover:border-accent/60 hover:text-accent"
+                    >
+                      avanzar
+                    </button>
+                  )
                 )}
                 <button
-                  onClick={() => kill(i.id)}
-                  aria-label="Borrar idea"
+                  onClick={() => (discarded ? remove(i.id) : discard(i.id))}
+                  aria-label={discarded ? "Borrar idea" : "Descartar idea"}
+                  title={discarded ? "Borrar definitivamente" : "Descartar"}
                   className="rounded-[6px] border border-line px-2 py-1 font-mono text-xs text-dim transition hover:border-red-900 hover:text-red-400"
                 >
-                  x
+                  {discarded ? "x" : "descartar"}
                 </button>
               </div>
             </li>

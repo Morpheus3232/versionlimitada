@@ -3,15 +3,15 @@
 /* Tokens — en síntonia visual con molino.app (paleta dark de Molino) */
 @theme {
   --color-paper: #0a0a0c;      /* fondo */
-  --color-panel: #131315;      /* superficie */
-  --color-raise: #16161a;      /* elevado */
-  --color-line: #2a2a2e;       /* borde */
+  --color-panel: #121215;      /* superficie */
+  --color-raise: #17171b;      /* elevado */
+  --color-line: #2e2e34;       /* borde */
   --color-linesoft: #1a1a1e;   /* borde tenue */
-  --color-ink: #f3f1ea;        /* texto (crema) */
-  --color-muted: #b0b0a6;      /* texto secundario */
-  --color-dim: #6f6f66;        /* texto terciario */
+  --color-ink: #f5f3ee;        /* texto (crema) */
+  --color-muted: #b6b6ac;      /* texto secundario */
+  --color-dim: #7c7c72;        /* texto terciario */
   --color-accent: #7c8cff;     /* acento índigo (Molino) */
-  --color-accenthover: #94a0ff;
+  --color-accenthover: #a2adff;
   --color-gold: #f5b022;       /* oro (Molino) */
 }
 
@@ -24,17 +24,22 @@
 html {
   background: var(--color-paper);
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-inter), system-ui, sans-serif;
+  font-feature-settings: "kern" 1, "liga" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3, h4 {
   font-family: var(--font-space-grotesk), sans-serif;
   letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 .font-heading { font-family: var(--font-space-grotesk), sans-serif; }
 
@@ -46,16 +51,15 @@ h1, h2, h3, h4 {
   border-radius: 4px;
 }
 
-/* ── Atmósfera ─────────────────────────────── */
+/* ── Atmósfera (tenue, para no competir con el texto) ─────────── */
 .sky {
   position: absolute;
   inset: 0;
   pointer-events: none;
   overflow: hidden;
   background:
-    radial-gradient(58% 54% at 70% 10%, rgba(124, 140, 255, 0.22), transparent 62%),
-    radial-gradient(50% 46% at 24% 6%, rgba(245, 176, 34, 0.10), transparent 58%),
-    radial-gradient(72% 62% at 50% 112%, rgba(124, 140, 255, 0.08), transparent 62%),
+    radial-gradient(56% 50% at 72% 10%, rgba(124, 140, 255, 0.16), transparent 62%),
+    radial-gradient(46% 40% at 24% 6%, rgba(245, 176, 34, 0.07), transparent 58%),
     var(--color-paper);
   animation: dr-drift 26s ease-in-out infinite alternate;
 }
@@ -64,27 +68,27 @@ h1, h2, h3, h4 {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(to right, rgba(243, 241, 234, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(243, 241, 234, 0.045) 1px, transparent 1px);
+    linear-gradient(to right, rgba(243, 241, 234, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(243, 241, 234, 0.04) 1px, transparent 1px);
   background-size: 44px 44px;
-  mask-image: radial-gradient(75% 70% at 50% 0%, #000 30%, transparent 75%);
-  opacity: 0.7;
+  mask-image: radial-gradient(75% 70% at 50% 0%, #000 30%, transparent 72%);
+  opacity: 0.5;
 }
 
-/* ── Orbe (nexo idea → negocio) ───────────── */
+/* ── Orb (nexo idea → negocio) ────────────────────────── */
 .orb-core {
   position: absolute;
   inset: 26%;
   border-radius: 9999px;
-  background: radial-gradient(circle at 35% 30%, #e6e8ff, #aeb8ff 42%, #7c8cff 78%, #5a66c9);
-  box-shadow: 0 0 60px rgba(124, 140, 255, 0.5), 0 0 130px rgba(124, 140, 255, 0.35);
+  background: radial-gradient(circle at 35% 30%, #e8eaff, #b3bcff 42%, #7c8cff 78%, #5a66c9);
+  box-shadow: 0 0 48px rgba(124, 140, 255, 0.42), 0 0 110px rgba(124, 140, 255, 0.28);
   animation: dr-pulse 4.5s ease-in-out infinite;
 }
 .orb-ring {
   position: absolute;
   inset: 0;
   border-radius: 9999px;
-  border: 1px dashed rgba(124, 140, 255, 0.5);
+  border: 1px dashed rgba(124, 140, 255, 0.45);
   animation: dr-spin 22s linear infinite;
 }
 .orb-ring::before {
@@ -103,8 +107,8 @@ h1, h2, h3, h4 {
   inset: 0;
   border-radius: 9999px;
   background:
-    conic-gradient(from 0deg, transparent 0deg, rgba(245,176,34,0.25) 60deg, transparent 120deg),
-    conic-gradient(from 180deg, transparent 0deg, rgba(124,140,255,0.30) 70deg, transparent 150deg);
+    conic-gradient(from 0deg, transparent 0deg, rgba(245, 176, 34, 0.22) 60deg, transparent 120deg),
+    conic-gradient(from 180deg, transparent 0deg, rgba(124, 140, 255, 0.26) 70deg, transparent 150deg);
   -webkit-mask: radial-gradient(circle, transparent 54%, #000 56%, #000 62%, transparent 64%);
   mask: radial-gradient(circle, transparent 54%, #000 56%, #000 62%, transparent 64%);
   animation: dr-spin-rev 30s linear infinite;
@@ -113,7 +117,7 @@ h1, h2, h3, h4 {
   position: absolute;
   inset: -30%;
   border-radius: 9999px;
-  background: radial-gradient(circle, rgba(124, 140, 255, 0.18), rgba(245, 176, 34, 0.10) 45%, transparent 70%);
+  background: radial-gradient(circle, rgba(124, 140, 255, 0.14), rgba(245, 176, 34, 0.08) 45%, transparent 70%);
   filter: blur(6px);
 }
 .orb-sats { position: absolute; inset: 4%; animation: dr-spin 40s linear infinite; }
@@ -152,33 +156,36 @@ h1, h2, h3, h4 {
 }
 
 .glass {
-  background: rgba(10, 10, 12, 0.72);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(10, 10, 12, 0.8);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
 }
 
-/* Celdas — tarjetas redondeadas estilo Molino */
+/* ── Celdas — tarjetas nítidas estilo Molino ───────────────── */
 .cell {
   position: relative;
   border: 1px solid var(--color-line);
-  border-radius: var(--radius-md, 0.625rem);
-  background: linear-gradient(180deg, var(--color-raise), var(--color-panel) 120%);
+  border-radius: 0.625rem;
+  background: var(--color-raise);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 .cell::before {
   content: "";
   position: absolute;
   top: -1px;
-  left: 12px;
-  right: 12px;
+  left: 14px;
+  right: 14px;
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
-  opacity: 0.7;
+  opacity: 0.6;
 }
 .cell:hover {
-  border-color: #3d3d44;
+  border-color: #45454d;
   transform: translateY(-2px);
-  transition: transform 0.18s ease, border-color 0.18s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
+.cell:hover::before { opacity: 1; }
 
 .skip-link { position: absolute; left: -9999px; top: 0; z-index: 50; }
 .skip-link:focus {
@@ -186,7 +193,7 @@ h1, h2, h3, h4 {
   background: var(--color-accent);
   color: var(--color-paper);
   padding: 12px 20px;
-  border-radius: 0 0 var(--radius-md, 0.625rem) 0;
+  border-radius: 0 0 0.625rem 0;
 }
 
 /* ── keyframes ─────────────────────────────── */
@@ -198,7 +205,7 @@ h1, h2, h3, h4 {
 @keyframes dr-spin-rev { to { transform: rotate(-360deg); } }
 @keyframes dr-pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
-  50%      { transform: scale(1.04); opacity: 0.88; }
+  50%      { transform: scale(1.02); opacity: 0.9; }
 }
 @keyframes dr-rise {
   from { opacity: 0; transform: translateY(18px); }
