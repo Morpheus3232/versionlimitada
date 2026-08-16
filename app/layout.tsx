@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { LabProvider } from "@/components/lab/LabContext";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
@@ -8,17 +9,13 @@ const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], display: "swap", variab
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], display: "swap", variable: "--font-jetbrains" });
 
 export const metadata: Metadata = {
-  title: "VersionLimitada — máquina de evidencia",
+  title: "VersionLimitada — laboratorio de ideas",
   description:
-    "Una máquina que busca dolor real, lo documenta en expedientes, corre experimentos y decide qué merece ser construido. Don't build what sounds good — build what proves itself.",
+    "Sistema operativo del laboratorio: señales, expedientes, hipótesis, experimentos, resultados y decisiones build / iterate / kill.",
 };
 
 const NAV = [
-  { href: "/", label: "Inicio" },
-  { href: "/#senal", label: "Radar" },
-  { href: "/#expediente", label: "Expediente #001" },
-  { href: "/#experimentos", label: "Experimentos" },
-  { href: "/#cementerio", label: "Cementerio" },
+  { href: "/", label: "Laboratorio" },
   { href: "/construir", label: "Construir" },
   { href: "/patentes", label: "Patentar" },
   { href: "/transparencia", label: "Transparencia" },
@@ -58,14 +55,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
 
-        <main id="principal" className="flex-1">
-          {children}
-        </main>
+        <LabProvider>
+          <main id="principal" className="flex-1">
+            {children}
+          </main>
+        </LabProvider>
 
         <footer className="border-t border-linesoft">
           <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-10 font-mono text-xs text-dim sm:flex-row sm:items-center">
-            <p>VersionLimitada · máquina de evidencia · código abierto (MIT)</p>
-            <p>{`Don't build what sounds good · build what proves itself`}</p>
+            <p>VersionLimitada · laboratorio de ideas · código abierto (MIT)</p>
+            <p>{`build / iterate / kill · se aprende de lo que muere`}</p>
           </div>
         </footer>
       </body>
