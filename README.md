@@ -1,8 +1,10 @@
 # VersionLimitada
 
-> Transformamos ideas en realidad.
+> No construimos lo que suena bien. Construimos lo que se demuestra.
 
-**VersionLimitada** es un laboratorio de productos digitales. No nace para "hacer aplicaciones" sino para **detectar problemas que valga la pena resolver y convertirlos en productos reales** con aplicaciones, agentes de IA y herramientas propias.
+**VersionLimitada** es una máquina que descubre problemas reales, reúne evidencia,
+formula hipótesis, ejecuta experimentos y toma decisiones `build / iterate / kill`.
+La unidad principal del sistema es `problema + evidencia + experimento`, no una idea.
 
 > **Acceso público y código abierto (MIT).** Este repositorio y su utilidad son libres: podés usarlo, modificarlo y compartirlo. La web vive en `https://versionlimitada.online` y está en síntonia visual con `molino.app`.
 
@@ -56,7 +58,7 @@ versionlimitada/
 
 ## Funcionalidades
 
-- **`/` — Base de cómputos**: motor de IA, herramientas, proyectos en vivo, **Radar de ideas** (últimos 30/60 días con fuentes) y **Tablero de ideas** (pipeline idea→negocio, localStorage).
+- **`/` — Estado de la máquina**: radar de señales (fuentes públicas), expediente #001 con anatomía y evidencia, experimentos y cementerio. Cada afirmación declara su origen: `observado / inferido / estimado / generado (IA)`.
 - **`/construir` — Constructor de webs (estilo Lovable)**: generá un sitio con una descripción, publicá en `/s/[slug]` o descargá el HTML. Motor de tokens tipo OpenRouter (ver transparencia).
 - **`/patentes` — Guía para patentar ideas**: simple y didáctica, multi-país, con fuentes oficiales y disclaimers.
 - **`/transparencia` — Modelo de precios del motor de tokens.**

@@ -50,15 +50,15 @@ export interface Signal {
   source: string;
   url?: string;
   category: string;
-  /** nº de menciones/incidencias independientes observadas (null = aún no contadas). */
-  mentions?: number;
-  workaroundObserved?: boolean;
 }
 
 export interface Evidence {
   label: string;
   value: string;
   provenance: EvidenceProvenance;
+  /** De dónde sale ésto (sólo si es real y verificable). Si no existe, no se presenta como observado. */
+  origin?: string;
+  date?: string;
 }
 
 export interface ProblemAnatomy {
@@ -88,6 +88,9 @@ export interface Opportunity {
   hypothesis: string;
   evidence: Evidence[];
   status: "OPEN" | "IN_EXPERIMENT" | "BUILD" | "ITERATE" | "KILLED";
+  /** experimento que prueba esta oportunidad, si existe. */
+  experimentId?: string;
+  decision?: Decision;
 }
 
 export interface ExperimentMetric {
@@ -102,11 +105,15 @@ export interface Experiment {
   title: string;
   hypothesis: string;
   offer: string;
+  /** Cómo se prueba (landing + CTA, waitlist, pricing test…). */
+  method: string;
+  /** Métrica principal que decide. */
   funnel: string;
   url?: string;
-  realTraffic: boolean;
+  /** true = la oferta está realmente publicada y recibe tráfico. */
+  launched: boolean;
   metrics: ExperimentMetric[];
-  state: "RUNNING" | "CONCLUDED";
+  state: "PLANNED" | "RUNNING" | "CONCLUDED";
   decision?: Decision;
   notes?: string;
 }

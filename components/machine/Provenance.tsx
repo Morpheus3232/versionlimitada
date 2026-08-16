@@ -15,6 +15,13 @@ const LABEL: Record<EvidenceProvenance, string> = {
   GENERATED: "generado · ia",
 };
 
+export const NATURE: Record<EvidenceProvenance, string> = {
+  OBSERVED: "Qué sabemos · se observó, con fuente y fecha",
+  INFERRED: "Qué creemos · conclusión derivada de observaciones",
+  ESTIMATED: "Qué suponemos · estimación con supuestos de trabajo",
+  GENERATED: "Qué propone la máquina · sugerido por IA, no cuenta como hecho",
+};
+
 export function ProvenanceTag({ kind }: { kind: EvidenceProvenance }) {
   return (
     <span

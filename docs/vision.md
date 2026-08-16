@@ -2,8 +2,7 @@
 
 ## Qué es
 
-VersionLimitada es el laboratorio que convierte ideas en realidad usando los recursos disponibles:
-modelos y agentes de IA, herramientas de desarrollo (Kilo, OpenCode), y la infraestructura propia que va surgiendo de los productos que construimos.
+VersionLimitada es una **máquina de descubrir y demostrar qué cosas vale la pena construir**: recoge señales de dolor, reúne evidencia, formula hipótesis, ejecuta experimentos y decide `build / iterate / kill`. La unidad principal del sistema es `problema + evidencia + experimento`, no una idea.
 
 No es una empresa de apps. Es una **máquina de descubrir qué cosas vale la pena construir** y llevarlas hasta producir valor real (uso, retención, pago).
 

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Pipeline from "@/components/machine/Pipeline";
+import Estado from "@/components/machine/Estado";
 import Signals from "@/components/machine/Signals";
 import Opportunities from "@/components/machine/Opportunities";
 import Experiments from "@/components/machine/Experiments";
@@ -7,7 +8,7 @@ import Graveyard from "@/components/machine/Graveyard";
 import { ProvenanceKey } from "@/components/machine/Provenance";
 import { SIGNALS, OPPORTUNITIES, EXPERIMENTS, GRAVEYARD, NOTE } from "@/lib/machine/data";
 
-// ─── Estructura editorial: la homepage es el expediente vivo de la máquina ──
+// ─── Estructura editorial: la home es el estado vivo de la máquina ──────────
 function Section({
   id,
   eyebrow,
@@ -39,9 +40,11 @@ function Section({
 }
 
 export default function Home() {
+  const activeExperiments = EXPERIMENTS.filter((e) => e.state === "RUNNING").length;
+
   return (
     <>
-      {/* Hero — la tesis, no el pitch */}
+      {/* Hero — la tesis */}
       <div className="relative isolate">
         <section className="mx-auto max-w-6xl px-6 pb-16 pt-16 sm:pt-24">
           <p className="font-mono text-sm text-muted">
@@ -53,24 +56,22 @@ export default function Home() {
             <span className="text-accent">Construimos lo que se demuestra.</span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-            VersionLimitada es una máquina que busca dolor real, lo documenta en
-            expedientes, corre experimentos y acumula evidencia para decidir{" "}
-            <span className="font-mono text-xs">build / iterate / kill</span>. Aquí
-            no dan ideas ni puntajes inventados: muestran qué se encontró, qué se
-            probó, qué hizo la gente y qué se decidió.
+            VersionLimitada encuentra problemas reales, reúne evidencia, prueba
+            hipótesis y decide qué merece ser construido. Aquí no se vende hype:
+            se muestra qué se observó, qué se supuso, qué se probó y qué ocurrió.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a
-              href="#senal"
+              href="#expediente"
               className="inline-flex items-center rounded-[10px] bg-accent px-5 py-3 font-heading text-sm font-bold text-paper transition hover:bg-accenthover"
             >
-              Ver señales →
+              Ver el expediente #001 →
             </a>
             <a
-              href="#oportunidades"
+              href="#senal"
               className="inline-flex items-center rounded-[10px] border border-line px-5 py-3 font-heading text-sm font-semibold text-ink transition hover:border-accent/60 hover:text-accent"
             >
-              Expediente abierto
+              Radar de señales
             </a>
           </div>
           <div className="mt-8 flex max-w-2xl flex-wrap items-center gap-3">
@@ -87,49 +88,63 @@ export default function Home() {
               la cadena · cómo opera la máquina
             </p>
             <p className="hidden font-mono text-[11px] text-dim sm:block">
-              señal → problema → anatomía → oportunidad → hipótesis → experimento → evidencia → decisión
+              señal → problema → evidencia → oportunidad → hipótesis → experimento → resultado → decisión
             </p>
           </div>
           <Pipeline />
           <p className="mt-4 font-mono text-[11px] leading-relaxed text-dim">{NOTE}</p>
         </section>
 
-        {/* Buscar */}
+        {/* Estado de la máquina */}
+        <Section
+          id="estado"
+          eyebrow="estado · la máquina ahora"
+          title="Estado de la máquina"
+          lead="Las cifras son las que realmente existen hoy. Si algo no tiene datos, no se inventa."
+        >
+          <Estado
+            signals={SIGNALS.length}
+            problems={OPPORTUNITIES.length}
+            activeExperiments={activeExperiments}
+          />
+        </Section>
+
+        {/* Radar de señales */}
         <Section
           id="senal"
-          eyebrow="buscando · entrada"
-          title="Señales de dolor real"
-          lead="La máquina no junta ideas: junta afirmaciones observables de que algo molesta. Cada señal trae su origen y, si ya se contó, el número de menciones independientes (observado, no opinado)."
+          eyebrow="radar · entrada de la máquina"
+          title="Radar de señales"
+          lead="Señales de dolor observable con origen y fuente pública. La máquina no junta ocurrencias: junta afirmaciones que se pueden verificar."
         >
           <Signals signals={SIGNALS} />
         </Section>
 
-        {/* Encontrado */}
+        {/* Expediente */}
         <Section
-          id="oportunidades"
-          eyebrow="encontrado · expediente abierto"
+          id="expediente"
+          eyebrow="expediente · caso abierto"
           title="Expediente #001"
-          lead="Cuando una señal reúne evidencia, se abre un expediente con anatomía del problema, competencia y un Evidence Score que separa hechos de inferencias y de sugerencias de la IA."
+          lead="Cuando una señal reúne evidencia, se abre un expediente. Cada afirmación declara su naturaleza — observada, inferida, estimada o propuesta por la máquina — y la decisión build / iterate / kill queda pendiente de resultados."
         >
-          <Opportunities items={OPPORTUNITIES} />
+          <Opportunities items={OPPORTUNITIES} experiments={EXPERIMENTS} />
         </Section>
 
-        {/* Probar */}
+        {/* Experimentos */}
         <Section
           id="experimentos"
           eyebrow="probando · experimentation lab"
-          title="Experimentos corriendo"
-          lead="Un expediente con evidencia no construye un SaaS: primero se arma una oferta, se lanza un CTA y se mide intención frente a dinero. Aquí los ceros son honestos hasta que dejen de serlo."
+          title="Experimentos"
+          lead="Primero se prueba con una oferta y un CTA, antes de construir nada. Mientras no haya un experimento corriendo con tráfico real, se declara la infraestructura lista."
         >
           <Experiments items={EXPERIMENTS} />
         </Section>
 
-        {/* Decidir */}
+        {/* Cementerio */}
         <Section
           id="cementerio"
           eyebrow="decidiendo · el cementerio"
-          title="Muertos con aprendizaje"
-          lead="Los experimentos que terminan en kill no se esconden: son activos. Un fracaso medido enseña más que diez aciertos no probados."
+          title="Cementerio"
+          lead="Los experimentos que terminan en kill son activos de conocimiento. Si no hay ninguno todavía, se dice."
         >
           <Graveyard items={GRAVEYARD} />
         </Section>
