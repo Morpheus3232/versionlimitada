@@ -1,17 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLab } from "@/components/lab/LabContext";
 import { ActionBtn, Area } from "@/components/lab/ui";
 
 // Asistente IA del laboratorio. Usa deepseek flash 0731 (OpenRouter).
 // Sus respuestas son «generado · ia»: nunca cuentan como hecho ni cambian la evidencia.
-export default function Assistant() {
+// Acepta contexto opcional de un expediente para pre-llenar el campo.
+export default function Assistant({ expedienteContext }: { expedienteContext?: { numero: number; titulo: string; problema: string; evidencia: string; hipotesis: string } }) {
   const { state } = useLab();
   const [open, setOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
+  const [prevCtx, setPrevCtx] = useState(expedienteContext?.numero);
   const [loading, setLoading] = useState(false);
   const [out, setOut] = useState<{ text?: string; error?: string } | null>(null);
+
+  // Sincroniza el prompt cuando cambia el expediente activo (no cuando
+  // el usuario ya escribió sobre el mismo expediente).
+  useEffect(() => {
+    if (expedienteContext && expedienteContext.numero !== prevCtx) {
+      setPrompt(`Analizame este expediente nº ${expedienteContext.numero} («${expedienteContext.titulo}») y decime qué le falta.`);
+      setPrevCtx(expedienteContext.numero);
+      setOut(null);
+    } else if (!expedienteContext && prevCtx !== undefined) {
+      setPrompt("");
+      setPrevCtx(undefined);
+      setOut(null);
+    }
+  }, [expedienteContext, prevCtx]);
 
   const ask = async () => {
     if (!prompt.trim() || loading) return;
@@ -68,6 +84,11 @@ export default function Assistant() {
             La IA sugiere, no decide. Todo lo que responde es «generado · ia»: no cuenta como
             hecho ni toca la evidencia observada. Solos decidís vos en build / iterate / kill.
           </p>
+          {expedienteContext && (
+            <p className="rounded-[6px] border border-linesoft bg-paper px-3 py-2 font-mono text-[10px] text-dim">
+              Contexto: expediente nº {expedienteContext.numero} · {expedienteContext.titulo}
+            </p>
+          )}
           <Area
             value={prompt}
             onChange={setPrompt}

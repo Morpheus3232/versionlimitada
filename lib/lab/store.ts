@@ -18,6 +18,9 @@ import type {
 } from "@/lib/lab/state";
 import { nextNumber, today, withHistory } from "@/lib/lab/state";
 
+// evidence vacía — las unidades se agregan desde el detalle del expediente
+const EMPTY_EVIDENCE = () => [] as Expediente["evidence"];
+
 export interface SignalInput {
   title: string;
   problem: string;
@@ -32,7 +35,7 @@ export interface SignalInput {
 export interface ExpedienteInput {
   title: string;
   problem: string;
-  evidence: string;
+  evidence: Expediente["evidence"];
   opportunity: string;
   hypothesis: string;
 }
@@ -116,7 +119,7 @@ export function convertSignal(s: LabState, id: string, who: string): { state: La
     title: sig.title,
     status: "OPEN",
     problem: sig.problem,
-    evidence: "",
+    evidence: EMPTY_EVIDENCE(),
     opportunity: "",
     hypothesis: "",
     signalIds: [sig.id],

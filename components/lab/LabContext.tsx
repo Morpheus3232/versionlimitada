@@ -12,7 +12,7 @@ import type {
   LabState,
   Signal,
 } from "@/lib/lab/state";
-import { seedState } from "@/lib/lab/state";
+import { seedState, normalizeLabState } from "@/lib/lab/state";
 import * as store from "@/lib/lab/store";
 import type { ExperimentInput, ExpedienteInput, SignalInput } from "@/lib/lab/store";
 
@@ -55,9 +55,10 @@ function load(fallback: LabState): LabState {
   try {
     const raw = window.localStorage.getItem(LS_KEY);
     if (!raw) return fallback;
-    const parsed = JSON.parse(raw) as LabState;
-    if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.expedientes)) return fallback;
-    return parsed;
+    const parsed = JSON.parse(raw);
+    // normalizeLabState migra evidence: string → EvidenceUnit[] para estados legacy (v1)
+    const normalized = normalizeLabState(parsed);
+    return normalized ?? fallback;
   } catch {
     return fallback;
   }

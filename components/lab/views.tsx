@@ -4,6 +4,8 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import type {
   DecisionResult,
+  EvidenceProvenance,
+  EvidenceUnit,
   Experiment,
   Expediente,
   GraveEntry,
@@ -11,16 +13,20 @@ import type {
 } from "@/lib/lab/state";
 import { useLab } from "@/components/lab/LabContext";
 import InlineAI from "@/components/lab/InlineAI";
+import OpportunityPipeline from "@/components/lab/Pipeline";
 import {
   ActionBtn,
   Area,
   DecisionBadge,
   DECISION_OPTIONS,
+  EvidenceEditor,
+  EvidenceUnitBadge,
   EXP_STATUS_OPTIONS,
   ExpStatusBadge,
   Field,
   Input,
   ProvenanceBadge,
+  ProvenanceTag,
   Select,
   SignalStatusBadge,
 } from "@/components/lab/ui";
@@ -85,6 +91,47 @@ function nextStep(ex: Experiment): string {
   return "Listo: este experimento quedó cerrado. Revisá el historial o el cementerio.";
 }
 
+// ─── Evidence read-only view (grouped by provenance) ────────────────────
+const EVIDENCE_GROUPS: { id: string; title: string; kinds: EvidenceProvenance[] }[] = [
+  { id: "sabemos", title: "Lo sabemos", kinds: ["OBSERVED"] },
+  { id: "suponemos", title: "Lo estamos suponiendo", kinds: ["INFERRED", "ESTIMATED"] },
+  { id: "propone", title: "Lo propone la máquina", kinds: ["GENERATED"] },
+];
+
+function EvidenceViewRead({ ev }: { ev: EvidenceUnit[] }) {
+  if (ev.length === 0) return <p className="font-mono text-sm text-dim">Sin evidencia registrada.</p>;
+  return (
+    <div className="grid gap-6 lg:grid-cols-3">
+      {EVIDENCE_GROUPS.map((g) => {
+        const items = ev.filter((e) => g.kinds.includes(e.provenance));
+        if (items.length === 0) return null;
+        return (
+          <div key={g.id}>
+            <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">{g.title}</p>
+            <div className="space-y-4">
+              {items.map((u) => (
+                <EvidenceUnitBadge key={u.id} unit={u} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Determina la próxima acción recomendada para un expediente ──────────
+function nextActionForExp(exp: Expediente, experiments: Experiment[]): { stage: string; cta: string; action: string } {
+  if (exp.evidence.length === 0) return { stage: "evidencia", cta: "Agregar evidencia", action: "Agregá evidencia observada o inferida que respalde esta investigación." };
+  if (!exp.hypothesis) return { stage: "hipótesis", cta: "Definir hipótesis", action: "Formulá una hipótesis clara que quieras probar." };
+  if (experiments.length === 0) return { stage: "experimento", cta: "Crear experimento", action: "Diseñá un experimento chico para probar tu hipótesis." };
+  const latest = experiments[experiments.length - 1];
+  if (!latest.result) return { stage: "resultado", cta: "Registrar resultado", action: "Registrá qué esperabas y qué ocurrió realmente." };
+  if (!latest.decision || latest.decision.value === "PENDING") return { stage: "decisión", cta: "Registrar decisión", action: "Decidí si esta idea sigue, se ajusta o se descarta." };
+  if (latest.decision.value === "ITERATE") return { stage: "experimento", cta: "Nuevo experimento", action: "Iterá sobre lo aprendido: diseñá la siguiente prueba." };
+  return { stage: "completo", cta: "", action: "Este expediente está completo. Revisá resultados en el Cementerio o empezá otro ciclo." };
+}
+
 // ─── Dashboard ──────────────────────────────────────────────────────────────
 export function Dashboard({ go }: { go: Go }) {
   const { state, member, setMember } = useLab();
@@ -145,10 +192,24 @@ export function Dashboard({ go }: { go: Go }) {
         </div>
       </Panel>
 
-      <div className="flex flex-wrap gap-3">
-        <ActionBtn onClick={() => go("radar", "create-signal")}>+ nueva señal</ActionBtn>
-        <ActionBtn tone="ghost" onClick={() => go("expedientes", "create-expediente")}>+ nuevo expediente</ActionBtn>
-        <ActionBtn tone="ghost" onClick={() => go("experimentos", "create-experimento")}>+ nuevo experimento</ActionBtn>
+      <div className="space-y-3">
+        <div className="flex flex-wrap gap-3">
+          <ActionBtn onClick={() => go("radar", "create-signal")}>+ nueva señal</ActionBtn>
+          <ActionBtn tone="ghost" onClick={() => go("expedientes", "create-expediente")}>+ nuevo expediente</ActionBtn>
+          <ActionBtn tone="ghost" onClick={() => go("experimentos", "create-experimento")}>+ nuevo experimento</ActionBtn>
+        </div>
+        <p className="font-mono text-[11px] leading-relaxed text-dim">
+          Capturá una señal → investigala en un expediente → probá una hipótesis → decidí.
+        </p>
+        <div className="flex flex-wrap gap-2 font-mono text-[11px] text-muted">
+          <span className="rounded-[4px] border border-line px-2 py-0.5">01 Señal</span>
+          <span className="text-dim">→</span>
+          <span className="rounded-[4px] border border-line px-2 py-0.5">02 Expediente</span>
+          <span className="text-dim">→</span>
+          <span className="rounded-[4px] border border-line px-2 py-0.5">03 Experimento</span>
+          <span className="text-dim">→</span>
+          <span className="rounded-[4px] border border-line px-2 py-0.5">04 Decisión</span>
+        </div>
       </div>
     </div>
   );
@@ -226,58 +287,70 @@ export function Radar({ intent, open }: { intent: string | null; open: Open }) {
       )}
 
       <div className="space-y-3">
-        {list.map((s) => (
-          <article key={s.id} className="rounded-[10px] border border-line bg-panel p-5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <ProvenanceBadge kind={s.evidence} />
-                <SignalStatusBadge status={s.status} />
-                {s.expedienteId && (
-                  <button onClick={() => open("expedientes", s.expedienteId!)} className="font-mono text-[11px] text-accent hover:underline">
-                    → expediente nº {String(expNum(s.expedienteId)).padStart(3, "0")}
-                  </button>
+        {list.length === 0 ? (
+          <div className="rounded-[10px] border border-line bg-panel p-6 text-center">
+            <p className="font-heading text-base font-bold text-ink">No hay señales todavía.</p>
+            <p className="mt-1 font-mono text-[11px] leading-relaxed text-dim">
+              Una señal es una observación, dato o patrón que merece investigar.
+            </p>
+            <div className="mt-4">
+              <ActionBtn onClick={() => setOpenForm(true)}>+ nueva señal</ActionBtn>
+            </div>
+          </div>
+        ) : (
+          list.map((s) => (
+            <article key={s.id} className="rounded-[10px] border border-line bg-panel p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <ProvenanceBadge kind={s.evidence} />
+                  <SignalStatusBadge status={s.status} />
+                  {s.expedienteId && (
+                    <button onClick={() => open("expedientes", s.expedienteId!)} className="font-mono text-[11px] text-accent hover:underline">
+                      → expediente nº {String(expNum(s.expedienteId)).padStart(3, "0")}
+                    </button>
+                  )}
+                </div>
+                <Meta>
+                  <span>{s.date}</span>
+                  <span>· {s.foundBy || "—"}</span>
+                  <span>· {s.sourceType}</span>
+                </Meta>
+              </div>
+              <h3 className="mt-2 font-heading text-base font-semibold text-ink">{s.title}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-muted">{s.problem}</p>
+              <p className="mt-1 font-mono text-[11px] text-dim">fuente · {s.source}</p>
+              {s.tags.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {s.tags.map((t) => (
+                    <span key={t} className="rounded-[4px] border border-line px-1.5 py-0.5 font-mono text-[10px] text-dim">#{t}</span>
+                  ))}
+                </div>
+              )}
+              {s.notes && <p className="mt-2 rounded-[6px] border border-linesoft bg-paper px-3 py-2 font-mono text-[11px] text-dim">{s.notes}</p>}
+
+              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-linesoft pt-3">
+                {editing === s.id ? (
+                  <SignalForm initial={s} onDone={() => setEditing(null)} />
+                ) : (
+                  <>
+                    <ActionBtn tone="ghost" onClick={() => setEditing(s.id)}>editar</ActionBtn>
+                    {s.status !== "CONVERTIDA" && (
+                      <ActionBtn tone="ghost" onClick={() => { const id = convertSignalToExpediente(s.id); if (id) open("expedientes", id); }}>
+                        convertir en expediente
+                      </ActionBtn>
+                    )}
+                    {s.status === "ABIERTA" && (
+                      <ActionBtn tone="danger" onClick={() => discardSignal(s.id)}>descartar</ActionBtn>
+                    )}
+                    {s.status === "DESCARTADA" && (
+                      <ActionBtn tone="ghost" onClick={() => restoreSignal(s.id)}>restaurar</ActionBtn>
+                    )}
+                  </>
                 )}
               </div>
-              <Meta>
-                <span>{s.date}</span>
-                <span>· {s.foundBy || "—"}</span>
-                <span>· {s.sourceType}</span>
-              </Meta>
-            </div>
-            <h3 className="mt-2 font-heading text-base font-semibold text-ink">{s.title}</h3>
-            <p className="mt-1 text-sm leading-relaxed text-muted">{s.problem}</p>
-            <p className="mt-1 font-mono text-[11px] text-dim">fuente · {s.source}</p>
-            {s.tags.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {s.tags.map((t) => (
-                  <span key={t} className="rounded-[4px] border border-line px-1.5 py-0.5 font-mono text-[10px] text-dim">#{t}</span>
-                ))}
-              </div>
-            )}
-            {s.notes && <p className="mt-2 rounded-[6px] border border-linesoft bg-paper px-3 py-2 font-mono text-[11px] text-dim">{s.notes}</p>}
-
-            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-linesoft pt-3">
-              {editing === s.id ? (
-                <SignalForm initial={s} onDone={() => setEditing(null)} />
-              ) : (
-                <>
-                  <ActionBtn tone="ghost" onClick={() => setEditing(s.id)}>editar</ActionBtn>
-                  {s.status !== "CONVERTIDA" && (
-                    <ActionBtn tone="ghost" onClick={() => { const id = convertSignalToExpediente(s.id); if (id) open("expedientes", id); }}>
-                      convertir en expediente
-                    </ActionBtn>
-                  )}
-                  {s.status === "ABIERTA" && (
-                    <ActionBtn tone="danger" onClick={() => discardSignal(s.id)}>descartar</ActionBtn>
-                  )}
-                  {s.status === "DESCARTADA" && (
-                    <ActionBtn tone="ghost" onClick={() => restoreSignal(s.id)}>restaurar</ActionBtn>
-                  )}
-                </>
-              )}
-            </div>
-          </article>
-        ))}
+            </article>
+          ))
+        )}
       </div>
     </div>
   );
@@ -294,22 +367,20 @@ function ExpForm({ initial, onDone, signalId, titleFor }: {
   const [f, setF] = useState({
     title: initial?.title ?? titleFor ?? "",
     problem: initial?.problem ?? "",
-    evidence: initial?.evidence ?? "",
     opportunity: initial?.opportunity ?? "",
     hypothesis: initial?.hypothesis ?? "",
   });
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   const submit = () => {
     if (!f.title.trim()) return;
-    if (initial) updateExpediente(initial.id, { ...f, evidence: f.evidence, opportunity: f.opportunity, hypothesis: f.hypothesis });
-    else createExpediente(f, signalId);
+    if (initial) updateExpediente(initial.id, { ...f });
+    else createExpediente({ ...f, evidence: [] }, signalId);
     onDone();
   };
   return (
     <div className="space-y-3">
       <Field label="título"><Input value={f.title} onChange={(v) => set("title", v)} /></Field>
       <Field label="problema"><Area value={f.problem} onChange={(v) => set("problem", v)} /></Field>
-      <Field label="evidencia (qué observamos)"><Area value={f.evidence} onChange={(v) => set("evidence", v)} rows={2} /></Field>
       <Field label="oportunidad (qué podría existir)"><Area value={f.opportunity} onChange={(v) => set("opportunity", v)} rows={2} /></Field>
       <Field label="hipótesis (qué queremos probar)"><Area value={f.hypothesis} onChange={(v) => set("hypothesis", v)} rows={2} /></Field>
       <div className="flex justify-end gap-2">
@@ -360,30 +431,44 @@ export function Expedientes({ intent, open }: { intent: string | null; open: Ope
       )}
 
       <div className="space-y-3">
-        {state.expedientes.map((e) => (
-          <button key={e.id} onClick={() => open("expedientes", e.id)} className="block w-full rounded-[10px] border border-line bg-panel p-5 text-left transition hover:border-accent/50">
-            <div className="flex items-center justify-between gap-3">
-              <span className="font-mono text-[11px] text-accent">expediente nº {String(e.number).padStart(3, "0")}</span>
-              <span className="font-mono text-[10px] uppercase tracking-widest text-dim">{e.status.replace(/_/g, " ")}</span>
+        {state.expedientes.length === 0 ? (
+          <div className="rounded-[10px] border border-line bg-panel p-6 text-center">
+            <p className="font-heading text-base font-bold text-ink">No hay expedientes todavía.</p>
+            <p className="mt-1 font-mono text-[11px] leading-relaxed text-dim">
+              Convertí una señal en una investigación concreta.
+            </p>
+            <div className="mt-4">
+              <ActionBtn onClick={() => setOpenForm(true)}>+ nuevo expediente</ActionBtn>
             </div>
-            <h3 className="mt-1 font-heading text-lg font-bold text-ink">{e.title}</h3>
-            <div className="mt-2 flex flex-wrap gap-2 font-mono text-[11px] text-dim">
-              <span>{e.signalIds.length} señales</span>
-              <span>·</span>
-              <span>{e.experimentIds.length} experimentos</span>
-              {e.hypothesis && <span>· hipótesis definida</span>}
-            </div>
-          </button>
-        ))}
+          </div>
+        ) : (
+          state.expedientes.map((e) => (
+            <button key={e.id} onClick={() => open("expedientes", e.id)} className="block w-full rounded-[10px] border border-line bg-panel p-5 text-left transition hover:border-accent/50">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-mono text-[11px] text-accent">expediente nº {String(e.number).padStart(3, "0")}</span>
+                <span className="font-mono text-[10px] uppercase tracking-widest text-dim">{e.status.replace(/_/g, " ")}</span>
+              </div>
+              <h3 className="mt-1 font-heading text-lg font-bold text-ink">{e.title}</h3>
+              <div className="mt-2 flex flex-wrap gap-2 font-mono text-[11px] text-dim">
+                <span>{e.signalIds.length} señales</span>
+                <span>·</span>
+                <span>{e.experimentIds.length} experimentos</span>
+                {e.hypothesis && <span>· hipótesis definida</span>}
+              </div>
+            </button>
+          ))
+        )}
       </div>
     </div>
   );
 }
 // ─── Detalle de expediente ──────────────────────────────────────────────────
 export function ExpDetail({ id, open }: { id: string; open: Open }) {
-  const { state, linkSignal, unlinkSignal } = useLab();
+  const { state, updateExpediente, linkSignal, unlinkSignal } = useLab();
   const exp = state.expedientes.find((e) => e.id === id);
   const [editing, setEditing] = useState(false);
+  const [showEvidenceEditor, setShowEvidenceEditor] = useState(false);
+  const [showAnatomyEditor, setShowAnatomyEditor] = useState(false);
   const [pickSignal, setPickSignal] = useState("");
   const [showNewExp, setShowNewExp] = useState(false);
 
@@ -414,11 +499,102 @@ export function ExpDetail({ id, open }: { id: string; open: Open }) {
       ) : (
         <div className="grid gap-px overflow-hidden rounded-[10px] border border-line bg-linesoft md:grid-cols-2">
           <div className="bg-panel p-5"><Dt label="problema" value={exp.problem} /></div>
-          <div className="bg-panel p-5"><Dt label="evidencia" value={exp.evidence} /></div>
           <div className="bg-panel p-5"><Dt label="oportunidad" value={exp.opportunity} /></div>
           <div className="bg-panel p-5"><Dt label="hipótesis" value={exp.hypothesis} /></div>
         </div>
       )}
+
+      {/* Evidence — vista por defecto, modo edición con toggle */}
+      <Panel title={`evidencia (${exp.evidence.length})`}>
+        {!showEvidenceEditor ? (
+          <div className="space-y-3">
+            <EvidenceViewRead ev={exp.evidence} />
+            <div className="flex justify-end">
+              <ActionBtn tone="ghost" onClick={() => setShowEvidenceEditor(true)}>Editar evidencia</ActionBtn>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <EvidenceEditor
+              units={exp.evidence}
+              onChange={(u) => updateExpediente(exp.id, { evidence: u })}
+            />
+            <div className="flex justify-end">
+              <ActionBtn tone="ghost" onClick={() => setShowEvidenceEditor(false)}>Cerrar edición</ActionBtn>
+            </div>
+          </div>
+        )}
+      </Panel>
+
+      {/* Anatomía estructurada (si existe) */}
+      {exp.anatomy && (
+        <Panel title="anatomía del problema">
+          <div className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+            <Dt label="quién" value={exp.anatomy.who} />
+            <Dt label="cuándo" value={exp.anatomy.context} />
+            <Dt label="frecuencia" value={exp.anatomy.frequency} />
+            <Dt label="intensidad" value={exp.anatomy.intensity} />
+            <Dt label="workaround actual" value={exp.anatomy.workaround} />
+            <Dt label="gasto existente" value={exp.anatomy.existingSpend} />
+            <Dt label="mercado" value={exp.anatomy.market} />
+            <Dt label="gap de competencia" value={exp.anatomy.competitorGap} />
+            {exp.competition && <Dt label="competidores" value={`${exp.competition.count} · ${exp.competition.gap}`} />}
+          </div>
+          <div className="mt-3">
+            <ActionBtn tone="ghost" onClick={() => setShowAnatomyEditor(true)}>Editar anatomía</ActionBtn>
+          </div>
+        </Panel>
+      )}
+      {!exp.anatomy && (
+        <Panel title="anatomía del problema">
+          <p className="mb-3 font-mono text-[11px] leading-relaxed text-dim">Todavía no definiste la anatomía del problema.</p>
+          <ActionBtn tone="ghost" onClick={() => setShowAnatomyEditor(true)}>Agregar anatomía</ActionBtn>
+        </Panel>
+      )}
+
+      {showAnatomyEditor && (
+        <Panel title="editar anatomía">
+          <p className="font-mono text-[11px] text-dim">Anatomía estructurada del problema. Completá los campos que tengas.</p>
+          <div className="mt-3 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+            <Field label="quién"><Input value={exp.anatomy?.who ?? ""} onChange={(v) => updateExpediente(exp.id, { anatomy: { ...(exp.anatomy ?? {} as any), who: v } })} /></Field>
+            <Field label="cuándo"><Input value={exp.anatomy?.context ?? ""} onChange={(v) => updateExpediente(exp.id, { anatomy: { ...(exp.anatomy ?? {} as any), context: v } })} /></Field>
+            <Field label="frecuencia"><Input value={exp.anatomy?.frequency ?? ""} onChange={(v) => updateExpediente(exp.id, { anatomy: { ...(exp.anatomy ?? {} as any), frequency: v } })} /></Field>
+            <Field label="intensidad"><Input value={exp.anatomy?.intensity ?? ""} onChange={(v) => updateExpediente(exp.id, { anatomy: { ...(exp.anatomy ?? {} as any), intensity: v } })} /></Field>
+            <Field label="workaround actual"><Area value={exp.anatomy?.workaround ?? ""} onChange={(v) => updateExpediente(exp.id, { anatomy: { ...(exp.anatomy ?? {} as any), workaround: v } })} rows={1} /></Field>
+            <Field label="gasto existente"><Input value={exp.anatomy?.existingSpend ?? ""} onChange={(v) => updateExpediente(exp.id, { anatomy: { ...(exp.anatomy ?? {} as any), existingSpend: v } })} /></Field>
+            <Field label="mercado"><Input value={exp.anatomy?.market ?? ""} onChange={(v) => updateExpediente(exp.id, { anatomy: { ...(exp.anatomy ?? {} as any), market: v } })} /></Field>
+            <Field label="gap de competencia"><Area value={exp.anatomy?.competitorGap ?? ""} onChange={(v) => updateExpediente(exp.id, { anatomy: { ...(exp.anatomy ?? {} as any), competitorGap: v } })} rows={1} /></Field>
+          </div>
+          <div className="mt-3 flex justify-end">
+            <ActionBtn tone="ghost" onClick={() => setShowAnatomyEditor(false)}>Cerrar</ActionBtn>
+          </div>
+        </Panel>
+      )}
+
+      {/* Pipeline compacto + próxima acción */}
+      <Panel title="circuito de la oportunidad">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px]">
+          {["Problema", "Evidencia", "Hipótesis", "Experimento", "Resultado", "Decisión"].map((name, i) => {
+            const stages = ["problema", "evidencia", "hipótesis", "experimento", "resultado", "decisión"] as const;
+            const current = nextActionForExp(exp, experiments).stage;
+            const idx = stages.indexOf(current as any);
+            const done = i < idx || (idx === -1);
+            const isCurrent = i === idx;
+            const isComplete = current === "completo";
+            return (
+              <span key={name} className={`inline-flex items-center gap-1 whitespace-nowrap ${done || isComplete ? "text-accent" : isCurrent ? "text-ink font-bold" : "text-dim"}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${done || isComplete ? "bg-accent" : isCurrent ? "bg-accent animate-pulse" : "bg-line"}`} />
+                {name}
+                {i < 5 && <span className="text-dim ml-1">→</span>}
+              </span>
+            );
+          })}
+        </div>
+        <div className="mt-3 rounded-[8px] border border-accent/40 bg-panel p-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-accent">Siguiente paso</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted">{nextActionForExp(exp, experiments).action}</p>
+        </div>
+      </Panel>
 
       <InlineAI
         promptDefault={`¿Qué le fallaría a esta investigación y qué experimento chico probarías? Expediente: ${exp.title}.`}
@@ -427,7 +603,7 @@ export function ExpDetail({ id, open }: { id: string; open: Open }) {
             numero: exp.number,
             titulo: exp.title,
             problema: exp.problem,
-            evidencia: exp.evidence,
+            evidencia: exp.evidence.map((u) => `${u.label}: ${u.value} (${u.provenance})`).join("; "),
             oportunidad: exp.opportunity,
             hipotesis: exp.hypothesis,
           },
@@ -599,17 +775,29 @@ export function Experimentos({ intent, open }: { intent: string | null; open: Op
         </Panel>
       )}
       <div className="space-y-3">
-        {state.experiments.map((e) => (
-          <button key={e.id} onClick={() => open("experimentos", e.id)} className="block w-full rounded-[10px] border border-line bg-panel p-5 text-left transition hover:border-accent/50">
-            <div className="flex items-center justify-between gap-3">
-              <span className="font-mono text-[11px] text-accent">exp nº {String(e.number).padStart(3, "0")}</span>
-              <ExpStatusBadge status={e.status} />
+        {state.experiments.length === 0 ? (
+          <div className="rounded-[10px] border border-line bg-panel p-6 text-center">
+            <p className="font-heading text-base font-bold text-ink">Todavía no diseñaste experimentos.</p>
+            <p className="mt-1 font-mono text-[11px] leading-relaxed text-dim">
+              Probá una hipótesis con evidencia antes de decidir.
+            </p>
+            <div className="mt-4">
+              <ActionBtn onClick={() => setOpenForm(true)}>+ nuevo experimento</ActionBtn>
             </div>
-            <h3 className="mt-1 font-heading text-lg font-bold text-ink">{e.name}</h3>
-            <p className="mt-1 line-clamp-1 text-sm text-muted">{e.hypothesis}</p>
-            {e.decision && <div className="mt-2"><DecisionBadge value={e.decision.value} /></div>}
-          </button>
-        ))}
+          </div>
+        ) : (
+          state.experiments.map((e) => (
+            <button key={e.id} onClick={() => open("experimentos", e.id)} className="block w-full rounded-[10px] border border-line bg-panel p-5 text-left transition hover:border-accent/50">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-mono text-[11px] text-accent">exp nº {String(e.number).padStart(3, "0")}</span>
+                <ExpStatusBadge status={e.status} />
+              </div>
+              <h3 className="mt-1 font-heading text-lg font-bold text-ink">{e.name}</h3>
+              <p className="mt-1 line-clamp-1 text-sm text-muted">{e.hypothesis}</p>
+              {e.decision && <div className="mt-2"><DecisionBadge value={e.decision.value} /></div>}
+            </button>
+          ))
+        )}
       </div>
     </div>
   );
@@ -825,8 +1013,8 @@ export function Cementerio() {
 
   if (state.graveyard.length === 0) {
     return (
-      <Panel title="cementerio · base histórica">
-        <p className="font-mono text-sm text-dim">0 experimentos matados — todavía vacío.</p>
+      <Panel title="cementerio · ideas descartadas y lo que aprendimos de ellas">
+        <p className="font-mono text-sm text-dim">Todavía no hay experimentos descartados. Cuando un experimento muere (kill), sus aprendizajes se guardan acá para no repetir el mismo error.</p>
       </Panel>
     );
   }

@@ -49,7 +49,7 @@ export default function LabApp() {
     if (!q) return null;
     const hit = (...fields: (string | undefined)[]) => fields.some((f) => f && f.toLowerCase().includes(q));
     const signals = state.signals.filter((x) => hit(x.title, x.problem, x.source, x.notes));
-    const expedientes = state.expedientes.filter((x) => hit(x.title, x.problem, x.evidence, x.opportunity, x.hypothesis));
+    const expedientes = state.expedientes.filter((x) => hit(x.title, x.problem, x.hypothesis) || x.evidence.some((u) => hit(u.label, u.value, u.origin)));
     const experiments = state.experiments.filter((x) => hit(x.name, x.hypothesis, x.offer));
     const graveyard = state.graveyard.filter((x) => hit(x.problema, x.solucion, x.aprendizaje, x.porQueMurio));
     return { signals, expedientes, experiments, graveyard };
@@ -62,6 +62,20 @@ export default function LabApp() {
   else if (view === "experimentos") body = selected ? <ExpDetailView id={selected} open={open} /> : <Experimentos intent={intent} open={open} />;
   else body = <Cementerio />;
   if (view === "guia") body = <Guia />;
+
+  // Contexto del expediente activo (para pasar al Assistant global cuando corresponde)
+  const currentExp = view === "expedientes" && selected
+    ? state.expedientes.find((e) => e.id === selected)
+    : undefined;
+  const expedienteContext = currentExp
+    ? {
+        numero: currentExp.number,
+        titulo: currentExp.title,
+        problema: currentExp.problem,
+        evidencia: currentExp.evidence.map((u) => `${u.label}: ${u.value} (${u.provenance})`).join("; "),
+        hipotesis: currentExp.hypothesis,
+      }
+    : undefined;
 
   return (
     <div className="mx-auto max-w-6xl px-6 pb-16">
@@ -96,7 +110,7 @@ export default function LabApp() {
       </nav>
 
       <div className="mt-4 max-w-2xl">
-        <Assistant />
+        <Assistant expedienteContext={expedienteContext} />
       </div>
 
       {results && (        <section aria-label="Resultados de búsqueda" className="mt-5 rounded-[10px] border border-line bg-panel p-5">

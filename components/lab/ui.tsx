@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import type { ReactNode } from "react";
-import type { DecisionResult, ExpStatus, Provenance, SignalStatus } from "@/lib/lab/state";
+import type { DecisionResult, EvidenceProvenance, EvidenceUnit, ExpStatus, Provenance, SignalStatus } from "@/lib/lab/state";
+import { newEvidenceId } from "@/lib/lab/state";
 
 const inputCls =
   "w-full rounded-[8px] border border-line bg-paper px-3 py-2 font-mono text-sm text-ink placeholder-dim outline-none focus:border-accent";
@@ -72,6 +74,7 @@ export function Tags({ value, onChange }: { value: string[]; onChange: (v: strin
 }
 
 export const PROVENANCE_OPTIONS: Provenance[] = ["OBSERVED", "INFERRED", "ESTIMATED", "GENERATED"];
+export const EVIDENCE_PROVENANCE_OPTIONS: EvidenceProvenance[] = ["OBSERVED", "INFERRED", "ESTIMATED", "GENERATED"];
 export const DECISION_OPTIONS: DecisionResult[] = ["BUILD", "ITERATE", "KILL", "PENDING"];
 export const EXP_STATUS_OPTIONS: ExpStatus[] = [
   "NO_DISEÑADO",
@@ -85,6 +88,38 @@ export const EXP_STATUS_OPTIONS: ExpStatus[] = [
 
 export const SIGNAL_STATUS_OPTIONS: SignalStatus[] = ["ABIERTA", "CONVERTIDA", "DESCARTADA"];
 
+// ─── Badge helpers ──────────────────────────────────────────────────────────
+
+const PROVENANCE_STYLE: Record<string, string> = {
+  OBSERVED: "border-accent/50 text-accent",
+  INFERRED: "border-line text-muted",
+  ESTIMATED: "border-gold/50 text-gold",
+  GENERATED: "border-dashed border-line text-dim",
+};
+
+const PROVENANCE_LABEL: Record<string, string> = {
+  OBSERVED: "observado",
+  INFERRED: "inferido",
+  ESTIMATED: "estimado",
+  GENERATED: "generado · ia",
+};
+
+/** Etiquetas en español para mostrar en UI editable. */
+const PROVENANCE_LABEL_ES: Record<string, string> = {
+  OBSERVED: "Observado",
+  INFERRED: "Inferido",
+  ESTIMATED: "Estimado",
+  GENERATED: "Generado por IA",
+};
+
+/** Tooltips cortos para cada provenance. */
+const PROVENANCE_TITLE: Record<string, string> = {
+  OBSERVED: "Dato visto directamente o fuente primaria",
+  INFERRED: "Conclusión derivada de evidencia",
+  ESTIMATED: "Valor aproximado o calculado",
+  GENERATED: "Contenido producido por el asistente IA",
+};
+
 function Badge({ className, children }: { className: string; children: ReactNode }) {
   return (
     <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-[5px] border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest ${className}`}>
@@ -93,20 +128,123 @@ function Badge({ className, children }: { className: string; children: ReactNode
   );
 }
 
+/**
+ * ProvenanceTag → componente canónico para mostrar origen de evidencia.
+ * ProvenanceBadge es un alias que delega a éste (unificados).
+ */
+export function ProvenanceTag({ kind }: { kind: EvidenceProvenance }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-[5px] border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest ${PROVENANCE_STYLE[kind]}`}
+      title={PROVENANCE_TITLE[kind]}
+    >
+      <span aria-hidden className="h-1 w-1 rounded-full bg-current opacity-70" />
+      {PROVENANCE_LABEL[kind]}
+    </span>
+  );
+}
+
+/** Delegado a ProvenanceTag — mantener para compatibilidad. */
 export function ProvenanceBadge({ kind }: { kind: Provenance }) {
-  const map: Record<Provenance, string> = {
-    OBSERVED: "border-accent/50 text-accent",
-    INFERRED: "border-line text-muted",
-    ESTIMATED: "border-gold/50 text-gold",
-    GENERATED: "border-dashed border-line text-dim",
-  };
-  const label: Record<Provenance, string> = {
-    OBSERVED: "observado",
-    INFERRED: "inferido",
-    ESTIMATED: "estimado",
-    GENERATED: "generado · ia",
-  };
-  return <Badge className={map[kind]}>{label[kind]}</Badge>;
+  return <ProvenanceTag kind={kind as EvidenceProvenance} />;
+}
+
+export function ProvenanceKey() {
+  const keys: EvidenceProvenance[] = ["OBSERVED", "INFERRED", "ESTIMATED", "GENERATED"];
+  return (
+    <p className="flex flex-wrap gap-2 font-mono text-[11px] text-dim">
+      {keys.map((k) => (
+        <ProvenanceTag key={k} kind={k} />
+      ))}
+    </p>
+  );
+}
+
+export function EvidenceUnitBadge({ unit, onClick }: { unit: EvidenceUnit; onClick?: () => void }) {
+  return (
+    <div className={`border-l-2 border-linesoft py-1 pl-4 ${onClick ? "cursor-pointer hover:bg-paper/50" : ""}`} onClick={onClick}>
+      <div className="flex items-center justify-between gap-3">
+        <p className="font-mono text-[10px] uppercase tracking-widest text-dim">{unit.label}</p>
+        <ProvenanceTag kind={unit.provenance} />
+      </div>
+      <p className="mt-1 font-heading text-sm font-semibold text-ink">{unit.value}</p>
+      {(unit.origin || unit.date) && (
+        <p className="mt-0.5 font-mono text-[11px] text-dim">
+          {unit.origin && <span>fuente · {unit.origin}</span>}
+          {unit.origin && unit.date && <span className="mx-1">/</span>}
+          {unit.date && <span>{unit.date}</span>}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Editor en línea de unidades de evidencia (add/edit/remove). */
+export function EvidenceEditor({ units, onChange }: { units: EvidenceUnit[]; onChange: (u: EvidenceUnit[]) => void }) {
+  const update = (id: string, patch: Partial<EvidenceUnit>) =>
+    onChange(units.map((u) => (u.id === id ? { ...u, ...patch } : u)));
+  const remove = (id: string) => onChange(units.filter((u) => u.id !== id));
+  const add = () =>
+    onChange([...units, { id: newEvidenceId(), label: "", value: "", provenance: "OBSERVED" as EvidenceProvenance }]);
+  return (
+    <div className="space-y-3">
+      {units.length === 0 && <p className="font-mono text-[11px] text-dim">Sin evidencia registrada.</p>}
+      {units.map((u) => (
+        <div key={u.id} className="rounded-[8px] border border-line bg-paper p-3 space-y-2">
+          <div className="flex gap-2">
+            <input
+              className="flex-1 rounded-[6px] border border-line bg-panel px-2 py-1 font-mono text-xs text-ink outline-none focus:border-accent"
+              value={u.label}
+              onChange={(e) => update(u.id, { label: e.target.value })}
+              placeholder="título de esta evidencia"
+            />
+            <select
+              className="rounded-[6px] border border-line bg-panel px-2 py-1 font-mono text-xs text-ink outline-none focus:border-accent"
+              value={u.provenance}
+              onChange={(e) => update(u.id, { provenance: e.target.value as EvidenceProvenance })}
+            >
+              {EVIDENCE_PROVENANCE_OPTIONS.map((p) => (
+                <option key={p} value={p} className="bg-panel text-ink" title={PROVENANCE_TITLE[p]}>{PROVENANCE_LABEL_ES[p]}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => remove(u.id)}
+              className="rounded-[6px] border border-red-900 px-2 py-1 font-mono text-[10px] text-red-400 hover:bg-red-900/10"
+            >
+              quitar
+            </button>
+          </div>
+          <textarea
+            className="w-full rounded-[6px] border border-line bg-panel px-2 py-1 font-mono text-xs text-ink outline-none focus:border-accent resize-y"
+            rows={2}
+            value={u.value}
+            onChange={(e) => update(u.id, { value: e.target.value })}
+            placeholder="descripción de la evidencia"
+          />
+          <div className="flex gap-2">
+            <input
+              className="flex-1 rounded-[6px] border border-line bg-panel px-2 py-1 font-mono text-[11px] text-ink outline-none focus:border-accent"
+              value={u.origin ?? ""}
+              onChange={(e) => update(u.id, { origin: e.target.value || undefined })}
+              placeholder="fuente"
+            />
+            <input
+              className="w-28 rounded-[6px] border border-line bg-panel px-2 py-1 font-mono text-[11px] text-ink outline-none focus:border-accent"
+              value={u.date ?? ""}
+              onChange={(e) => update(u.id, { date: e.target.value || undefined })}
+              placeholder="fecha"
+            />
+          </div>
+        </div>
+      ))}
+      <button
+        onClick={add}
+        className="rounded-[6px] border border-line px-2.5 py-1 font-mono text-[11px] text-muted hover:text-accent"
+      >
+        + añadir evidencia
+      </button>
+    </div>
+  );
 }
 
 export function ExpStatusBadge({ status }: { status: ExpStatus }) {
