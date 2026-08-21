@@ -167,12 +167,12 @@ export default function Home() {
           >
             Construir Web con IA
           </Link>
-          <Link
-            href="/"
+          <a
+            href="#principal"
             className="w-full sm:w-auto px-8 py-4 rounded-[8px] border border-line bg-transparent text-ink font-heading font-semibold text-base hover:bg-panel hover:border-accent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
           >
             Ver Estado de la Máquina
-          </Link>
+          </a>
         </div>
       </section>
 
