@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import LabApp from "@/components/lab/App";
 
 export const metadata: Metadata = {
   title: "VersionLimitada — laboratorio de ideas",
@@ -261,6 +262,9 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* LABORATORIO FUNCIONAL (LabProvider ya provee estado en layout.tsx) */}
+      <LabApp />
     </div>
   );
 }
